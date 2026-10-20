@@ -146,8 +146,9 @@ ok(L('figureSVG(EXERCISES.lateral).includes(PAL.db) && figureSVG(EXERCISES.later
 ok(L('figureSVG(EXERCISES.press_suelo).split(PAL.db).length') > L('figureSVG(EXERCISES.remo_silla).split(PAL.db).length'), 'con las dos manos libres hay dos mancuernas; en el remo a un brazo, una');
 ok(L('Object.values(EXERCISES).every((e) => !/NaN|undefined/.test(figureSVG(e)) && !/NaN|undefined/.test(figureSVG(e, { crop: true })))'), 'ninguna ilustración tiene coordenadas inválidas');
 // Músculos en todas las animaciones: no desaparecen, no se hinchan y los miembros no se acortan entre fotogramas.
-// En plancha y flexiones el pecho y el abdomen miran al piso: se ven asomando por el borde (vis baja, pero con ancho).
-const MUS_EXC = new Set(['plancha abs', 'flexiones chest']);
+// Miran al piso y se ven asomando por el borde (vis baja, pero con ancho): el pecho y el abdomen en plancha y flexiones,
+// y el tríceps abajo en los press acostados (el codo apoyado y abierto).
+const MUS_EXC = new Set(['plancha abs', 'flexiones chest', 'press_suelo triceps', 'press_banco triceps']);
 const stats = L(`Object.values(EXERCISES).map((e) => [e.id, muscleStats(e)])`);
 const bad = (fn) => stats.flatMap(([id, st]) => st.muscles.filter((m) => !MUS_EXC.has(id + ' ' + m.m) && m.frames.some((p, i) => p && fn(p, m.frames[i - 1]))).map((m) => id + ' ' + m.m));
 let issues = bad((p) => p.vis < 0.15);

@@ -49,8 +49,8 @@ function pose3D(raw, f) {
   J.H = add3(J.N, scl3(J.up, 13));
   for (const n of ['1', '2']) {
     const s = n === '1' ? 1 : -1;
-    // Lado lejano sin dato: espejo del cercano (la mano articulada, solo si la muñeca también es espejo).
-    const get = (k) => raw[k + n] ?? (k === 'G' && raw['W' + n] ? undefined : raw[k + '1']);
+    // Lado lejano sin dato: espejo del cercano (la mano y la punta del pie, solo si muñeca o tobillo también son espejo).
+    const get = (k) => raw[k + n] ?? ((k === 'G' && raw['W' + n]) || (k === 'T' && raw['F' + n]) ? undefined : raw[k + '1']);
     J['S' + n] = front ? add3(J.N, [0, -4, 12.5 * s]) : add3(mix3(J.N, J.P, 0.12), [0, 0, 12.5 * s]);
     J['Hp' + n] = add3(J.P, [0, 0, 6.5 * s]);
     for (const k of ['E', 'W', 'G', 'K', 'F', 'T']) {
@@ -185,7 +185,7 @@ function patch(f, [key, t0, t1, ang, span], J, n) {
   // Si mira para el otro lado (p. ej. el abdomen en la plancha), se asoma por el borde más cercano: nunca desaparece.
   if (lo > hi) { const w = Math.min(0.28, (0.3 * len) / R); return { s2: [p, q, s[2], s[3]], o: Math.sign(peek || 1) * (0.92 - w), w, vis, len, R }; }
   // El ancho crece de a poco a medida que el músculo gira hacia la cámara (sin saltos entre fotogramas).
-  const show = Math.min(1, Math.max(0, (vis - 0.15) / 0.5));
+  const show = Math.min(1, Math.max(0, (vis - 0.15) / 0.75));
   let o = (lo + hi) / 2, w = 0.28 + Math.max(0, (hi - lo) / 2 - 0.28) * show;
   w = Math.min(w, (0.3 * len) / R, 0.92);
   if (Math.abs(o) + w > 0.92) o = Math.sign(o) * (0.92 - w);
@@ -195,7 +195,7 @@ function patch(f, [key, t0, t1, ang, span], J, n) {
 function patchesOver(f, def, FR, n) {
   const P = FR.map((J) => patch(f, def, J, n));
   if (P.length < 3 || P.some((x) => !x)) return P;
-  for (let pass = 0; pass < 2; pass++) {
+  for (let pass = 0; pass < 3; pass++) {
     const prev = P.map((x) => ({ ...x }));
     for (let i = 1; i < P.length - 1; i++) for (const k of ['o', 'w']) P[i][k] = (prev[i - 1][k] + 2 * prev[i][k] + prev[i + 1][k]) / 4;
   }
@@ -412,7 +412,7 @@ function sceneBoxes(s, front, A) {
     add([s.x, s.x + 30], [150, 20], [-16, 16], tones('#E1E4E8', '#D1D5DB', '#BFC4CB'));
     for (let i = 0; i < 6; i++) add([s.x + 4, s.x + 26], [144 - i * 6, 139 - i * 6], [-11, 11], tones('#5B6573', '#4B5563', '#3D4652'));
   }
-  if (s.t === 'post') add([s.x - 3, s.x + 3], [150, 0], [-3, 3], MET);
+  if (s.t === 'post') { const d = front && A.W1 ? A.W1[0] : 0; add([s.x - 3, s.x + 3], [150, 0], [d - 3, d + 3], MET); }   // de frente, a la altura de la mano
   // Las escenas se dibujan de atrás hacia adelante dentro de sí mismas (orden de armado).
   return { svg: parts.join(''), pts };
 }
@@ -464,14 +464,24 @@ function propSVG(p, FR, ts, { path, group, animV, animate, front, dur }) {
   const move = animV('transform', FR.map((J) => pt2(prj(posOf(J)))), 'animateTransform', 'type="translate" ');
   const place = (s) => `<g transform="translate(${pt2(a)})">${move}${s}</g>`;
   if (p.t === 'kb') return { own: true, under: place(`<path d="M-5.5 5V-.5a5.5 5.5 0 0111 0V5" fill="none" stroke="${L}" stroke-width="5"/><path d="M-5.5 5V-.5a5.5 5.5 0 0111 0V5" fill="none" stroke="${PAL.kb}" stroke-width="2.6"/><circle cx="0" cy="12" r="9" fill="${PAL.kb}" stroke="${L}" stroke-width="1.5"/><path d="M-4 8a5 5 0 014-2" stroke="#6B7280" stroke-width="1.6" fill="none" stroke-linecap="round"/>`), over: '' };
-  const M = (x, y, J) => (front ? [J[p.at][0] + 30, 150 - y, 100 - x] : [x - 100, 150 - y, J[p.at][2]]);
+  // Punto fijo de la banda: sobre la columna (de perfil, en el centro; de frente, a la altura de la mano en la postura a).
+  const M = (x, y) => (front ? [A[p.at][0], 150 - y, 100 - x] : [x - 100, 150 - y, 0]);
   if (p.t === 'towel') {   // toalla enrollada entre las dos manos
     const ln = (w, extra) => path((J) => `M${pt2(prj(J[p.at]))}L${pt2(prj(J[p.to]))}`, `fill="none" stroke-width="${w}" stroke-linecap="round" ${extra}`);
     return { under: ln(9, `stroke="${L}"`) + ln(6.4, 'stroke="#7FB3D5"') + ln(6.4, 'stroke="#5E97BF" stroke-dasharray="2 3"'), over: '' };
   }
   if (p.t === 'band') {
-    const anchor = (J) => prj(M(p.x, p.y, J));
+    const anchor = () => prj(M(p.x, p.y));
     return { under: path((J) => `M${pt2(anchor(J))}L${pt2(prj(J[p.at]))}`, 'fill="none" stroke="#E5484D" stroke-width="3" stroke-linecap="round"') + path((J) => circlePath(anchor(J), 3), `fill="#E5484D" stroke="${L}" stroke-width="1"`), over: '' };
+  }
+  if (p.t === 'arrow') {   // hacia dónde se hace fuerza (isométricos): flecha naranja que late, junto a la mano
+    const ax = (J, k) => add3(add3(J[p.at], [0, 10, 0]), scl3(p.dir, k));
+    const head = (J) => {
+      const a2 = prj(ax(J, -13)), b2 = prj(ax(J, 4)), [ux, uy] = unit(b2[0] - a2[0], b2[1] - a2[1]), m = [-uy, ux], c = [b2[0] - ux * 6, b2[1] - uy * 6];
+      return `M${pt2(a2)}L${pt2(c)}M${pt2([c[0] + m[0] * 4.5, c[1] + m[1] * 4.5])}L${pt2(b2)}L${pt2([c[0] - m[0] * 4.5, c[1] - m[1] * 4.5])}Z`;
+    };
+    const pulse = animate ? '<animate attributeName="opacity" values=".35;1;.35" dur="1.2s" repeatCount="indefinite"/>' : '';
+    return { under: '', over: `<g>${pulse}${path(head, `fill="${L}" stroke="${L}" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"`)}${path(head, 'fill="#FF6B2C" stroke="#FF6B2C" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"')}</g>` };
   }
   if (p.t === 'ring') {
     const top = (J) => prj([J[p.at][0], 175, J[p.at][2]]);

@@ -2,6 +2,13 @@
 
 Todos los cambios de Tendón Fuerte, del más nuevo al más viejo.
 
+## 1.13.9 — Bandas atadas, empuje visible, pie corregido y press de pecho
+
+- **Rotación externa con banda** y **Face pull**: las bandas estaban sueltas en el aire. Ahora salen de la columna (en el face pull, las dos del mismo punto).
+- **Rotación externa isométrica contra la pared**: una flecha naranja que late muestra que hay que empujar el dorso de la mano hacia afuera, contra la pared. La cámara queda casi de frente para que se vean la pared y el brazo.
+- **Extensión de rodilla isométrica sentado**: el pie de la pierna apoyada en el piso tomaba la punta del pie de la pierna estirada y se veía gigante. Ahora cada pie tiene su tamaño.
+- **Press en el suelo** y **Press en banco**: el codo iba pegado al cuerpo, como en un curl acostado. Ahora baja abierto a unos 45° del torso, como en un press de pecho, y las mancuernas suben sobre el pecho.
+
 ## 1.13.8 — Giro de 90° en la pronación y supinación
 
 - En **Pronación y supinación lenta** el giro es ahora de 90° en total (45° hacia cada lado desde la mancuerna vertical), en lugar de casi 180°.

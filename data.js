@@ -106,7 +106,7 @@ const EXERCISES = {
   press_suelo: {
     name: 'Press en el suelo con mancuernas', kind: 'peso', impl: 'db', ratio: 0.2, tag: ['hombro', 'codo_med'],
     cues: ['Acostado, rodillas flexionadas, codos a 45° del cuerpo.', 'Apoyá suave los brazos en el piso en cada repetición, sin rebotar.'],
-    fig: { a: { N: [60, 143], P: [103, 143], E1: [80, 145], W1: [80, 122], K1: [128, 118], F1: [138, 150] }, b: { E1: [66, 120], W1: [64, 96] }, props: [{ t: 'db', at: 'W1' }] },
+    fig: { a: { N: [60, 143], P: [103, 143], E1: [71, 146], W1: [71, 123], K1: [128, 118], F1: [138, 150], z: { E: 28, W: 24 } }, b: { E1: [66, 120], W1: [65, 97], z: { E: 16, W: 14 } }, props: [{ t: 'db', at: 'W1' }] },
   },
   remo_silla: {
     name: 'Remo a un brazo apoyado en silla', kind: 'peso', impl: 'db', ratio: 0.25, tag: ['codo_lat', 'muneca'], alt: 'remo_aros_iso',
@@ -181,7 +181,7 @@ Object.assign(EXERCISES, {
   press_banco: {
     name: 'Press en banco con mancuernas', kind: 'peso', impl: 'db', needs: ['bench'], ratio: 0.22, tag: ['hombro', 'codo_med'],
     cues: ['Acostado en el banco, pies firmes en el piso.', 'Bajá las mancuernas al costado del pecho en 2 s, codos a 45°.', 'Empujá sin bloquear de golpe los codos.'],
-    fig: { a: { N: [62, 110], P: [104, 112], E1: [80, 118], W1: [80, 95], K1: [128, 122], F1: [130, 150] }, b: { E1: [68, 88], W1: [66, 64] }, props: [{ t: 'db', at: 'W1' }], scene: [{ t: 'bench', x: 46, y: 118, w: 70 }] },
+    fig: { a: { N: [62, 110], P: [104, 112], E1: [72, 120], W1: [72, 97], K1: [128, 122], F1: [130, 150], z: { E: 28, W: 24 } }, b: { E1: [67, 87], W1: [66, 64], z: { E: 16, W: 14 } }, props: [{ t: 'db', at: 'W1' }], scene: [{ t: 'bench', x: 46, y: 118, w: 70 }] },
   },
   dominadas: {
     name: 'Dominadas (agarre neutro)', kind: 'reps', impl: 'bar', alsoRings: true, tag: ['codo_lat', 'codo_med', 'hombro'], alt: 'remo_aros_iso',
@@ -283,7 +283,7 @@ Object.assign(EXERCISES, {
   iso_rot_ext_pared: {
     name: 'Rotación externa isométrica contra la pared', kind: 'iso', impl: 'bw', zone: 'hombro',
     cues: ['De pie al lado de un marco de puerta, codo pegado al cuerpo a 90°.', 'Empujá el dorso de la mano hacia afuera contra el marco, sin mover el brazo.', 'Fuerza moderada (50–70 %); dolor hasta 3–4 sobre 10.'],
-    fig: { front: true, a: { N: [100, 45], P: [100, 88], E1: [87, 71], W1: [76, 76], E2: [113, 69], W2: [115, 92], K1: [94, 119], F1: [93, 150], K2: [106, 119], F2: [107, 150] }, scene: [{ t: 'wall', x: 72, left: true }] },
+    fig: { front: true, a: { N: [100, 45], P: [100, 88], E1: [87, 71], W1: [76, 76], E2: [113, 69], W2: [115, 92], K1: [94, 119], F1: [93, 150], K2: [106, 119], F2: [107, 150] }, props: [{ t: 'arrow', at: 'W1', dir: [0, 0, 1] }], scene: [{ t: 'wall', x: 72, left: true }], cam: 100 },
   },
   iso_rodilla_sentado: {
     name: 'Extensión de rodilla isométrica sentado', kind: 'iso', impl: 'bw', zone: 'rodilla',
