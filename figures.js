@@ -2,8 +2,9 @@
 // con contorno, animado entre la postura a y la b (SMIL, sin librerías). Generadas por código: sin imágenes de terceros.
 // Las posturas de data.js son de perfil (o de frente); acá se pasan a 3D (x adelante, y arriba, z hacia la derecha del
 // personaje) y se proyectan con una cámara isométrica. Cada parte es una cápsula proyectada; se anima interpolando su
-// contorno (atributo d). Las partes de un miembro forman una sola silueta, los miembros se ordenan por profundidad
-// y el músculo que trabaja el ejercicio se ilumina en rojo.
+// contorno (atributo d) en varios fotogramas intermedios calculados por ángulos, así los miembros no se acortan a mitad
+// de camino. Las partes de un miembro forman una sola silueta, los miembros se ordenan por profundidad y el músculo que
+// trabaja el ejercicio se ilumina en rojo; la cámara gira lo necesario para que ese músculo se vea.
 
 const PAL = {
   line: '#22262D', skin: '#F1C6A3', skin2: '#D9A684', shirt: '#F6C514', shirt2: '#D7A90B', shorts: '#5E6673', shorts2: '#454C58',
@@ -25,11 +26,13 @@ const mix = (p, q, t) => [p[0] + (q[0] - p[0]) * t, p[1] + (q[1] - p[1]) * t];
 const unit = (dx, dy) => { const l = Math.hypot(dx, dy) || 1; return [dx / l, dy / l]; };
 const r1 = (n) => Math.round(n * 10) / 10;
 const pt2 = (q) => `${r1(q[0])} ${r1(q[1])}`;
-// Cámara: girada 40° hacia el frente del personaje y elevada 28° (vista isométrica suave).
-const CAM = (() => {
-  const a = (40 * Math.PI) / 180, b = (28 * Math.PI) / 180;
-  return { r: [Math.cos(a), 0, -Math.sin(a)], u: [-Math.sin(a) * Math.sin(b), Math.cos(b), -Math.cos(a) * Math.sin(b)], v: [Math.sin(a) * Math.cos(b), Math.sin(b), Math.cos(a) * Math.cos(b)] };
-})();
+// Cámara elevada 28° y girada alrededor del personaje: 0° = de perfil por su derecha, 40° = tres cuartos de frente
+// (la habitual), negativos = tres cuartos de atrás. Es una variable de módulo: cada dibujo fija la suya (todo es sincrónico).
+function camera(yaw, pitch = 28) {
+  const a = (yaw * Math.PI) / 180, b = (pitch * Math.PI) / 180;
+  return { yaw, r: [Math.cos(a), 0, -Math.sin(a)], u: [-Math.sin(a) * Math.sin(b), Math.cos(b), -Math.cos(a) * Math.sin(b)], v: [Math.sin(a) * Math.cos(b), Math.sin(b), Math.cos(a) * Math.cos(b)] };
+}
+let CAM = camera(40);
 const prj = (P) => [100 + dot3(P, CAM.r), 150 - dot3(P, CAM.u)];   // punto 3D → pantalla (y hacia abajo)
 const prjV = (d) => [dot3(d, CAM.r), -dot3(d, CAM.u)];              // dirección 3D → pantalla
 const depth = (P) => dot3(P, CAM.v);                                 // más grande = más cerca
@@ -64,6 +67,45 @@ function pose3D(raw, f) {
   return J;
 }
 
+// Postura intermedia: la cadera se mueve en línea recta y cada segmento gira (slerp) manteniendo su largo.
+function slerp(u, v, t) {
+  const c = Math.max(-1, Math.min(1, dot3(u, v))), w = Math.acos(c);
+  if (w < 1e-3) return unit3(mix3(u, v, t));
+  const s = Math.sin(w);
+  return add3(scl3(u, Math.sin((1 - t) * w) / s), scl3(v, Math.sin(t * w) / s));
+}
+function poseAt(A, B, t) {
+  if (!B || t === 0) return A;
+  if (t === 1) return B;
+  const J = { lat: [0, 0, 1] }, lerp = (a, b) => a + (b - a) * t;
+  const bone = (from, k0, k1) => {   // J[k1] = J[from] + dirección interpolada × largo interpolado
+    const dA = sub3(A[k1], A[k0]), dB = sub3(B[k1], B[k0]);
+    return add3(from, scl3(slerp(unit3(dA), unit3(dB), t), lerp(Math.hypot(...dA), Math.hypot(...dB))));
+  };
+  J.P = mix3(A.P, B.P, t); J.N = bone(J.P, 'P', 'N');
+  J.up = unit3(sub3(J.N, J.P)); J.fw = [J.up[1], -J.up[0], 0]; J.H = add3(J.N, scl3(J.up, 13));
+  // Hombros y caderas: fijos al torso (se expresan en sus ejes arriba/adelante/costado).
+  const local = (K, k, o) => { const d = sub3(K[k], K[o]); return [dot3(d, K.up), dot3(d, K.fw), d[2]]; };
+  const place = (k, o) => { const a = local(A, k, o), b = local(B, k, o); return add3(J[o], add3(scl3(J.up, lerp(a[0], b[0])), add3(scl3(J.fw, lerp(a[1], b[1])), [0, 0, lerp(a[2], b[2])]))); };
+  for (const n of ['1', '2']) {
+    J['S' + n] = place('S' + n, 'N'); J['Hp' + n] = place('Hp' + n, 'P');
+    if (A['E' + n]) J['E' + n] = bone(J['S' + n], 'S' + n, 'E' + n);
+    if (A['W' + n]) J['W' + n] = bone(J['E' + n], 'E' + n, 'W' + n);
+    if (A['K' + n]) J['K' + n] = bone(J['Hp' + n], 'Hp' + n, 'K' + n);
+    if (A['F' + n]) J['F' + n] = bone(J['K' + n], 'K' + n, 'F' + n);
+    if (A['T' + n]) J['T' + n] = bone(J['F' + n], 'F' + n, 'T' + n);
+  }
+  return J;
+}
+// Fotogramas de la animación: 7 posturas con aceleración suave (ida); la animación va y vuelve.
+const FRAMES = 6, easeT = (t) => 0.5 - Math.cos(Math.PI * t) / 2;
+function framesOf(f) {
+  const A = pose3D(f.a, f), B = f.b ? pose3D({ ...f.a, ...f.b }, f) : null;
+  if (!B) return { FR: [A], ts: [0], A, B };
+  const ts = Array.from({ length: FRAMES + 1 }, (_, i) => easeT(i / FRAMES));
+  return { FR: ts.map((t) => poseAt(A, B, t)), ts, A, B };
+}
+
 // ——— Formas proyectadas ———
 // Cápsula de p a q (2D), radio ra en p y rb en q (misma estructura siempre, para poder interpolar).
 function capsule(p, q, ra, rb) {
@@ -94,63 +136,134 @@ function lens([p, q, ra, rb], o, t0, t1, w) {
 // Ancho proyectado de una sección elíptica del torso (semiejes al costado y hacia adelante) medido según la normal m.
 const halfWidth = (J, side, fwd, m) => { const a = prjV(scl3(J.lat, side)), b = prjV(scl3(J.fw, fwd)); return Math.hypot(a[0] * m[0] + a[1] * m[1], b[0] * m[0] + b[1] * m[1]); };
 
-// Dónde se ilumina cada músculo: [segmento, centro, t0, t1, medio ancho]. Centro negativo = adelante del segmento
-// (pecho, bíceps, cuádriceps), positivo = atrás; se gira según cuánto de ese lado ve la cámara.
-const MUS = {
-  delt: [['ua', 0, -0.14, 0.46, 0.9]], biceps: [['ua', -0.35, 0.28, 0.98, 0.6]], triceps: [['ua', 0.35, 0.22, 0.98, 0.6]],
-  forearm: [['fa', 0, 0.02, 0.84, 0.85]], chest: [['to', -0.45, 0.06, 0.46, 0.5]], abs: [['to', -0.5, 0.48, 0.94, 0.45]],
-  back: [['to', 0.45, 0.04, 0.62, 0.5]], lumbar: [['to', 0.5, 0.58, 0.96, 0.45]], glutes: [['th', 0.4, -0.16, 0.34, 0.58]],
-  quads: [['th', -0.35, 0.12, 0.94, 0.62]], hams: [['th', 0.35, 0.34, 0.96, 0.62]], calves: [['sh', 0.35, 0.04, 0.6, 0.62]],
-};
+// Segmentos 3D [desde, hasta, radio inicial, radio final]. El del torso usa el ancho proyectado de su sección.
+function segOf(key, J, n) {
+  if (key === 'ua') return J['E' + n] && [J['S' + n], J['E' + n], 5.2, 4.3];
+  if (key === 'fa') return J['W' + n] && [J['E' + n], J['W' + n], 4.3, 3.3];
+  if (key === 'th') return J['K' + n] && [J['Hp' + n], J['K' + n], 7.6, 5.8];
+  if (key === 'sh') return J['F' + n] && [J['K' + n], J['F' + n], 5.6, 3.9];
+  const a = mix3(J.N, J.P, -0.06), b = mix3(J.N, J.P, 0.86), [p, q] = [prj(a), prj(b)], [ux, uy] = unit(q[0] - p[0], q[1] - p[1]), m = [-uy, ux];
+  return [a, b, halfWidth(J, 12.5, 8.5, m), halfWidth(J, 11, 7.5, m)];
+}
+// Hacia dónde mira la cara anterior del segmento (pecho, bíceps, cuádriceps).
+function front3(f, key, J, n) {
+  if (key === 'to' || f.front) return J.fw;
+  const s = segOf(key, J, n), d = sub3(s[1], s[0]), a = [-d[1], d[0], 0];
+  return Math.hypot(...a) < 1e-3 ? J.fw : unit3(a);
+}
 
-function figureSVG(ex, { animate = true, size = '', crop = false, muscles = true } = {}) {
-  const f = ex.fig, L = PAL.line;
-  const A = pose3D(f.a, f), B = f.b ? pose3D({ ...f.a, ...f.b }, f) : null;
-  const both = (fn) => (B ? [fn(A), fn(B)] : [fn(A)]);
+// Músculos como parches sobre la superficie: [segmento, t0, t1 (a lo largo del hueso), ángulo alrededor del hueso
+// (0 = adelante, 180 = atrás), medio arco que cubre]. Proporciones según dónde está el vientre de cada músculo.
+const MUS = {
+  delt: [['ua', -0.15, 0.42, 0, 110]], biceps: [['ua', 0.3, 0.92, 0, 50]], triceps: [['ua', 0.15, 0.95, 180, 60]],
+  forearm: [['fa', 0.05, 0.68, 0, 75]], chest: [['to', 0.08, 0.42, 32, 30], ['to', 0.08, 0.42, -32, 30]], abs: [['to', 0.45, 0.92, 0, 32]],
+  back: [['to', 0.08, 0.6, 180, 70]], lumbar: [['to', 0.6, 0.96, 180, 35]], glutes: [['th', -0.22, 0.3, 180, 75]],
+  quads: [['th', 0.12, 0.9, 0, 70]], hams: [['th', 0.25, 0.92, 180, 60]], calves: [['sh', 0.05, 0.52, 180, 65]],
+};
+// Cómo se ve un parche en una postura: el huso va centrado en o y tiene medio ancho w (fracciones del radio dibujado).
+// Solo cuenta la parte que mira a la cámara; nunca pasa del contorno ni se vuelve más ancho que 0,3 de su largo.
+function patch(f, [key, t0, t1, ang, span], J, n) {
+  const s = segOf(key, J, n); if (!s) return null;
+  const p = prj(s[0]), q = prj(s[1]), [ux, uy] = unit(q[0] - p[0], q[1] - p[1]), n2 = [-uy, ux];
+  const d = unit3(sub3(s[1], s[0])), f3 = front3(f, key, J, n);
+  const a = unit3(sub3(f3, scl3(d, dot3(f3, d)))), l = unit3(cross3(d, a));
+  const R = (s[2] + s[3]) / 2, [ra, rl] = key === 'to' ? [8.5, 12.5] : [R, R];
+  let lo = Infinity, hi = -Infinity, vis = -1;
+  for (let i = 0; i <= 36; i++) {
+    const g = ((ang + span * (i / 18 - 1)) * Math.PI) / 180, c = Math.cos(g), sn = Math.sin(g);
+    const fac = dot3(unit3(add3(scl3(a, c / ra), scl3(l, sn / rl))), CAM.v);
+    vis = Math.max(vis, fac);
+    if (fac < -0.02) continue;
+    const pv = prjV(add3(scl3(a, ra * c), scl3(l, rl * sn))), o = (pv[0] * n2[0] + pv[1] * n2[1]) / R;
+    lo = Math.min(lo, o); hi = Math.max(hi, o);
+  }
+  const len = Math.hypot(q[0] - p[0], q[1] - p[1]) * (t1 - t0);
+  if (lo > hi) return { s2: [p, q, s[2], s[3]], o: 0, w: 0, vis, len, R };
+  // El ancho crece de a poco a medida que el músculo gira hacia la cámara (sin saltos entre fotogramas).
+  const show = Math.min(1, Math.max(0, (vis - 0.15) / 0.5));
+  let o = (lo + hi) / 2, w = 0.28 + Math.max(0, (hi - lo) / 2 - 0.28) * show;
+  w = Math.min(w, (0.3 * len) / R, 0.92);
+  if (Math.abs(o) + w > 0.92) o = Math.sign(o) * (0.92 - w);
+  return { s2: [p, q, s[2], s[3]], o, w, vis, len, R };
+}
+// Un músculo a lo largo de la animación: se suaviza el centro y el ancho entre fotogramas vecinos (los extremos quedan igual).
+function patchesOver(f, def, FR, n) {
+  const P = FR.map((J) => patch(f, def, J, n));
+  if (P.length < 3 || P.some((x) => !x)) return P;
+  for (let pass = 0; pass < 2; pass++) {
+    const prev = P.map((x) => ({ ...x }));
+    for (let i = 1; i < P.length - 1; i++) for (const k of ['o', 'w']) P[i][k] = (prev[i - 1][k] + 2 * prev[i][k] + prev[i + 1][k]) / 4;
+  }
+  return P;
+}
+// Ángulo de cámara para un ejercicio: el que mejor muestra sus músculos (lado cercano) en todos los fotogramas,
+// sin perder del todo la cara. Se prefiere el habitual (40°) si no hay motivo para girar.
+const CAM_YAWS = [40, 15, -15, -40, -65];
+const camCache = new Map();
+function pickCam(ex, FR) {
+  if (ex.fig.cam != null) return ex.fig.cam;
+  const key = ex.id ? ex.id + JSON.stringify(ex.fig.a) : null;
+  if (key && camCache.has(key)) return camCache.get(key);
+  const defs = (ex.mus || []).flatMap((m) => MUS[m] || []);
+  let best = 40, bestScore = -Infinity;
+  for (const yaw of CAM_YAWS) {
+    CAM = camera(yaw);
+    let score = yaw === 40 ? 0.6 : 0;
+    for (const J of FR) {
+      for (const def of defs) { const v = patch(ex.fig, def, J, '1')?.vis ?? 1; score += v < 0.15 ? -3 : Math.min(v, 0.8); }
+      score += 0.25 * dot3(J.fw, CAM.v);
+    }
+    score /= FR.length;
+    if (score > bestScore + 1e-6) { best = yaw; bestScore = score; }
+  }
+  if (key) camCache.set(key, best);
+  return best;
+}
+// Diagnóstico para los tests: cómo queda cada músculo en cada fotograma.
+function muscleStats(ex) {
+  const f = ex.fig, { FR } = framesOf(f);
+  CAM = camera(pickCam(ex, FR));
+  return {
+    yaw: CAM.yaw,
+    bones: FR.map((J) => ['ua', 'fa', 'th', 'sh'].map((k) => { const s = segOf(k, J, '1'); return s ? Math.hypot(...sub3(s[1], s[0])) : 0; })),
+    muscles: (ex.mus || []).flatMap((m) => (MUS[m] || []).map((def) => ({ m, frames: patchesOver(f, def, FR, '1') }))),
+  };
+}
+
+// at: dibuja quieta la postura intermedia t (0 = a, 1 = b), para revisar el movimiento.
+function figureSVG(ex, { animate = true, size = '', crop = false, muscles = true, at = null } = {}) {
+  const f = ex.fig, L = PAL.line, fr = framesOf(f);
+  CAM = camera(pickCam(ex, fr.FR));
+  const FR = at == null ? fr.FR : [poseAt(fr.A, fr.B, at)], ts = at == null ? fr.ts : [at], A = FR[0], moving = FR.length > 1;
   const dur = `${f.dur || 3}s`;
-  const ease = `keyTimes="0;.5;1" calcMode="spline" keySplines=".45 0 .55 1;.45 0 .55 1" dur="${dur}" repeatCount="indefinite"`;
-  const anim = (attr, a, b) => (animate && B && a !== b ? `<animate attributeName="${attr}" values="${a};${b};${a}" ${ease}/>` : '');
-  // Forma que depende de la postura: se calcula para a y b y se anima el contorno.
+  // Animación por fotogramas: ida por las 7 posturas y vuelta, a intervalos iguales (la suavidad ya está en las posturas).
+  const loop = (vals) => [...vals, ...vals.slice(0, -1).reverse()];
+  const timing = (n) => `keyTimes="${Array.from({ length: n }, (_, i) => Math.round((i / (n - 1)) * 1000) / 1000).join(';')}" calcMode="linear" dur="${dur}" repeatCount="indefinite"`;
+  const animV = (attr, vals, tag = 'animate', extra = '') => {
+    if (!animate || !moving || vals.every((v) => v === vals[0])) return '';
+    const all = loop(vals);
+    return `<${tag} attributeName="${attr}" ${extra}values="${all.join(';')}" ${timing(all.length)}/>`;
+  };
+  // Forma que depende de la postura: se calcula en cada fotograma y se anima el contorno.
   const path = (fn, attrs, extra = '') => {
-    const da = fn(A); if (!da) return '';
-    const db = B ? fn(B) : da;
-    return `<path d="${da}" ${attrs}>${anim('d', da, db)}${extra}</path>`;
+    const ds = FR.map(fn); if (!ds[0]) return '';
+    return `<path d="${ds[0]}" ${attrs}>${animV('d', ds)}${extra}</path>`;
   };
   // Una sola silueta por grupo: primero todas las formas engrosadas en color de línea, después los rellenos sin borde.
   const group = (parts, over = '') => parts.map(([fn]) => path(fn, `fill="${L}" stroke="${L}" stroke-width="${OW}" stroke-linejoin="round"`)).join('')
     + parts.map(([fn, fill]) => path(fn, `fill="${fill}"`)).join('') + over;
   const shade = (n, k) => PAL[k + (n === '2' ? '2' : '')];
-
-  // Segmentos proyectados [desde, hasta, radio inicial, radio final] y su dirección "adelante" en 3D.
-  const SEG = {
-    ua: (J, n) => J['E' + n] && [J['S' + n], J['E' + n], 5.2, 4.3],
-    fa: (J, n) => J['W' + n] && [J['E' + n], J['W' + n], 4.3, 3.3],
-    th: (J, n) => J['K' + n] && [J['Hp' + n], J['K' + n], 7.6, 5.8],
-    sh: (J, n) => J['F' + n] && [J['K' + n], J['F' + n], 5.6, 3.9],
-    to: (J) => {
-      const a = mix3(J.N, J.P, -0.06), b = mix3(J.N, J.P, 0.86), [p, q] = [prj(a), prj(b)], [ux, uy] = unit(q[0] - p[0], q[1] - p[1]), m = [-uy, ux];
-      return [a, b, halfWidth(J, 12.5, 8.5, m), halfWidth(J, 11, 7.5, m)];
-    },
-  };
-  const seg2 = (key, J, n) => { const s = SEG[key](J, n); return s && [prj(s[0]), prj(s[1]), s[2], s[3]]; };
-  const front3 = (key, J, n) => {   // hacia dónde mira la cara anterior del segmento
-    if (key === 'to' || f.front) return J.fw;
-    const s = SEG[key](J, n), d = sub3(s[1], s[0]), a = [-d[1], d[0], 0];
-    return Math.hypot(...a) < 1e-3 ? J.fw : unit3(a);
-  };
+  const seg2 = (key, J, n) => { const s = segOf(key, J, n); return s && [prj(s[0]), prj(s[1]), s[2], s[3]]; };
   const seg = (key, n, t0 = 0, t1 = 1, ra, rb) => (J) => {
     const s = seg2(key, J, n); if (!s) return '';
     return capsule(mix(s[0], s[1], t0), mix(s[0], s[1], t1), ra ?? s[2], rb ?? s[3]);
   };
-  // Músculos iluminados: más intensos en la postura b (contracción); en los isométricos, un pulso suave.
+  // Músculos iluminados: más intensos hacia la postura b (contracción); en los isométricos, un pulso suave. El tamaño no cambia.
   const mus = muscles ? ex.mus || [] : [];
-  const glow = !animate ? '' : B ? `<animate attributeName="opacity" values=".6;1;.6" ${ease}/>` : '<animate attributeName="opacity" values=".65;1;.65" dur="2.4s" repeatCount="indefinite"/>';
+  const glow = !animate ? '' : moving ? animV('opacity', ts.map((t) => r1(0.6 + 0.4 * t))) : '<animate attributeName="opacity" values=".65;1;.65" dur="2.4s" repeatCount="indefinite"/>';
   const musOn = (keys, n) => mus.flatMap((m) => MUS[m] || []).filter(([k]) => keys.includes(k))
-    .map(([k, c, t0, t1, w]) => path((J) => {
-      const s = seg2(k, J, n); if (!s) return '';
-      const [ux, uy] = unit(s[1][0] - s[0][0], s[1][1] - s[0][1]), fa = prjV(front3(k, J, n));
-      return lens(s, -c * (fa[0] * -uy + fa[1] * ux), t0, t1, w);
-    }, `fill="${n === '2' ? '#B81D24' : PAL.muscle}" stroke="#9E1219" stroke-width=".7" stroke-linejoin="round" opacity=".9"`, glow)).join('');
+    .map((def) => { const Ps = patchesOver(f, def, FR, n); return path((J, i) => { const P = Ps[i]; return P ? lens(P.s2, P.o, def[1], def[2], P.w) : ''; },
+      `fill="${n === '2' ? '#B81D24' : PAL.muscle}" stroke="#9E1219" stroke-width=".7" stroke-linejoin="round" opacity=".9"`, glow); }).join('');
 
   // ——— Partes del cuerpo ———
   const legParts = (n) => [
@@ -170,17 +283,19 @@ function figureSVG(ex, { animate = true, size = '', crop = false, muscles = true
   const faces = (a, b, c) => dot3(unit3(add3(scl3(A.fw, a), add3(scl3(A.up, b), scl3(A.lat, c)))), CAM.v) > 0.12;
   const stroke = (fn, w) => path(fn, `fill="none" stroke="${L}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round"`);
   const hair = (J) => {   // casquete: arco por arriba y atrás de la cabeza, de la nuca a la frente
+    // Visto de atrás (la cara mira lejos de la cámara) el pelo cubre casi toda la cabeza.
     const c = prj(J.H), u = unit(...prjV(J.up)), fw = prjV(J.fw), h = unit(u[0] - fw[0] * 0.8, u[1] - fw[1] * 0.8), R = HR + 0.4;
+    const away = Math.max(0, -dot3(J.fw, CAM.v)), b0 = -1.85 - away * 0.9, f0 = 1.15 + away * 1.6;
     const at = (ang, r) => { const cs = Math.cos(ang), sn = Math.sin(ang); return [c[0] + (h[0] * cs - h[1] * sn) * r, c[1] + (h[0] * sn + h[1] * cs) * r]; };
-    return `M${pt2(at(-1.85, R))}A${R} ${R} 0 1 1 ${pt2(at(1.15, R))}Q${pt2(at(-0.4, HR * 0.3))} ${pt2(at(-1.85, R))}Z`;
+    return `M${pt2(at(b0, R))}A${R} ${R} 0 1 1 ${pt2(at(f0, R))}Q${pt2(at((b0 + f0) / 2 + Math.PI, HR * (0.3 + away * 0.5)))} ${pt2(at(b0, R))}Z`;
   };
   const ear = faces(0, 0, 1) ? [[(J) => circlePath(fp(J, 1.2, -1.8, HR - 0.4), 2.6), PAL.skin]] : [];
-  const nose = [[(J) => circlePath(fp(J, HR - 0.4, -0.8, 0), 2.2), PAL.skin]];
+  const nose = faces(1, 0, 0) || dot3(A.fw, CAM.v) > -0.5 ? [[(J) => circlePath(fp(J, HR - 0.4, -0.8, 0), 2.2), PAL.skin]] : [];
   const faceParts = [-1, 1].filter((k) => faces(0.9, 0.15, k * 0.36) && dot3(unit3(add3(scl3(A.fw, 0.9), add3(scl3(A.up, 0.15), scl3(A.lat, k * 0.36)))), CAM.v) > 0.42).map((k) =>
     path((J) => circlePath(fp(J, 9.6, 1.6, k * 3.9), 1.4), `fill="${L}"`)
     + stroke((J) => `M${pt2(fp(J, 9.6, 4.8, k * 2.2))}L${pt2(fp(J, 8.4, 5.1, k * 5.8))}`, 1.3)).join('')
-    + stroke((J) => `M${pt2(fp(J, 9.4, -4.6, -2.6))}Q${pt2(fp(J, 10.4, -6.6, 0))} ${pt2(fp(J, 9.4, -4.6, 2.6))}`, 1.2)
-    + path((J) => circlePath(fp(J, HR + 0.6, -1.4, 0.3), 0.9), `fill="${PAL.skin2}"`)
+    + (faces(0.9, -0.4, 0) ? stroke((J) => `M${pt2(fp(J, 9.4, -4.6, -2.6))}Q${pt2(fp(J, 10.4, -6.6, 0))} ${pt2(fp(J, 9.4, -4.6, 2.6))}`, 1.2)
+      + path((J) => circlePath(fp(J, HR + 0.6, -1.4, 0.3), 0.9), `fill="${PAL.skin2}"`) : '')
     + (ear.length ? stroke((J) => `M${pt2(fp(J, 2.2, 0.4, HR))}Q${pt2(fp(J, 0, -1, HR + 0.4))} ${pt2(fp(J, 2.2, -3.6, HR))}`, 1) : '');
   const head = group([
     [(J) => capsule(prj(J.N), prj(mix3(J.N, J.H, 0.55)), 3.6, 3.6), PAL.skin], ...ear, ...nose,
@@ -194,14 +309,14 @@ function figureSVG(ex, { animate = true, size = '', crop = false, muscles = true
     const mirrored = f.a.W2 === undefined && !f.front && !f.z?.W && !f.one;
     if (p.at === 'W1' && mirrored && ['db', 'ring', 'band'].includes(p.t)) props.push({ ...p, at: 'W2' });
   }
-  const propsOf = (n) => props.filter((p) => p.at.slice(-1) === n).map((p) => propSVG(p, A, B, { path, group, anim, ease, animate, front: !!f.front }));
+  const propsOf = (n) => props.filter((p) => p.at.slice(-1) === n).map((p) => propSVG(p, FR, ts, { path, group, animV, animate, front: !!f.front }));
   const arm = (n) => {
     const ps = propsOf(n);
     return group(armParts(n), musOn(['ua', 'fa'], n)) + ps.map((p) => p.under).join('') + hand(n) + ps.map((p) => p.over).join('');
   };
 
-  // Grupos ordenados por profundidad (promedio de las dos posturas).
-  const zOf = (fn) => both(fn).reduce((s, x) => s + x, 0) / (B ? 2 : 1);
+  // Grupos ordenados por profundidad (promedio de los fotogramas).
+  const zOf = (fn) => FR.reduce((s, J) => s + fn(J), 0) / FR.length;
   const avgD = (keys) => (J) => keys.filter((k) => J[k]).reduce((s, k, _, arr) => s + depth(J[k]) / arr.length, 0);
   const groups = [
     { z: zOf(avgD(['N', 'P'])), svg: group([[pelvis, PAL.shorts], [torso, PAL.shirt]], musOn(['to'], '1')) },
@@ -213,7 +328,7 @@ function figureSVG(ex, { animate = true, size = '', crop = false, muscles = true
   ].sort((a, b) => a.z - b.z);
 
   // Piso: baldosa isométrica que abarca al personaje y la escena; sombra debajo del cuerpo.
-  const pts3 = [A, B || A].flatMap((J) => ['N', 'P', 'H', 'S1', 'S2', 'E1', 'E2', 'W1', 'W2', 'K1', 'K2', 'F1', 'F2', 'T1', 'T2'].filter((k) => J[k]).map((k) => J[k]));
+  const pts3 = FR.flatMap((J) => ['N', 'P', 'H', 'S1', 'S2', 'E1', 'E2', 'W1', 'W2', 'K1', 'K2', 'F1', 'F2', 'T1', 'T2'].filter((k) => J[k]).map((k) => J[k]));
   const scene = (f.scene || []).map((s) => sceneBoxes(s, !!f.front, A));
   const sceneP = scene.flatMap((s) => s.pts);
   const xs = [...pts3, ...sceneP].map((p) => p[0]), zs = [...pts3, ...sceneP].map((p) => p[2]);
@@ -223,7 +338,7 @@ function figureSVG(ex, { animate = true, size = '', crop = false, muscles = true
   const shadow = `<path d="${ellipse(sh[0], scl3(sh[1], 30).slice(0, 2), scl3(sh[2], 18).slice(0, 2))}" fill="${PAL.shadow}"/>`;
 
   // Encuadre: miniaturas cuadradas alrededor del cuerpo; grande, 200×170 con el piso y la escena.
-  const p2 = pts3.map(prj).concat([A, B || A].map((J) => { const c = prj(J.H); return [c[0], c[1] - HR - 4]; }));
+  const p2 = pts3.map(prj).concat(FR.map((J) => { const c = prj(J.H); return [c[0], c[1] - HR - 4]; }));
   const fl = [[X0, -7, Z0], [X1, -7, Z0], [X0, -7, Z1], [X1, -7, Z1], [X1, 0, Z1]].map(prj);
   const bb = (ps) => [Math.min(...ps.map((q) => q[0])), Math.min(...ps.map((q) => q[1])), Math.max(...ps.map((q) => q[0])), Math.max(...ps.map((q) => q[1]))];
   let vb;
@@ -243,8 +358,9 @@ function figureSVG(ex, { animate = true, size = '', crop = false, muscles = true
 // Caja 3D [x], [y], [z] con las tres caras visibles (arriba, frente y costado) en tonos de un mismo color.
 function box(X, Y, Z, [top, side1, side2], line = PAL.line) {
   const c = (i, j, k) => prj([X[i], Y[j], Z[k]]), poly = (ps) => `M${ps.map(pt2).join('L')}Z`;
+  const zi = CAM.v[2] >= 0 ? 1 : 0, xi = CAM.v[0] >= 0 ? 1 : 0;   // caras que miran a la cámara
   const faces = [
-    [c(0, 1, 0), c(1, 1, 0), c(1, 1, 1), c(0, 1, 1)], [c(0, 0, 1), c(1, 0, 1), c(1, 1, 1), c(0, 1, 1)], [c(1, 0, 0), c(1, 0, 1), c(1, 1, 1), c(1, 1, 0)],
+    [c(0, 1, 0), c(1, 1, 0), c(1, 1, 1), c(0, 1, 1)], [c(0, 0, zi), c(1, 0, zi), c(1, 1, zi), c(0, 1, zi)], [c(xi, 0, 0), c(xi, 0, 1), c(xi, 1, 1), c(xi, 1, 0)],
   ];
   return faces.map((ps, i) => `<path d="${poly(ps)}" fill="${[top, side1, side2][i]}" stroke="${line}" stroke-width="1.1" stroke-linejoin="round"/>`).join('');
 }
@@ -294,8 +410,8 @@ function handleDir(grip, J, n, front) {
   const a = [-d[1], d[0], 0];
   return front || Math.hypot(...a) < 1e-3 ? [1, 0, 0] : unit3(a);
 }
-function propSVG(p, A, B, { path, group, anim, ease, animate, front }) {
-  const L = PAL.line, n = p.at.slice(-1);
+function propSVG(p, FR, ts, { path, group, animV, animate, front }) {
+  const L = PAL.line, n = p.at.slice(-1), A = FR[0];
   const posOf = (J) => (p.mid ? mix3(J.W1, J.W2, 0.5) : J[p.at]);
   if (p.t === 'db') {
     const one = (grip, extra = '') => {
@@ -311,16 +427,17 @@ function propSVG(p, A, B, { path, group, anim, ease, animate, front }) {
       return { under: `<g${extra}>${plate(-nearSign)}${bar}</g>`, over: `<g${extra}>${plate(nearSign)}</g>` };
     };
     if (Array.isArray(p.grip)) {
-      const fade = (v) => (animate ? `<animate attributeName="opacity" values="${v}" ${ease}/>` : '');
+      // Cambio de agarre: una vista se desvanece mientras aparece la otra (en los isométricos, un ida y vuelta de 6 s).
+      const k = ts.length > 1 ? ts : [0, 0.5, 1, 0.5];
+      const fade = (inv) => (animate ? `<animate attributeName="opacity" values="${[...k, ...k.slice(0, -1).reverse()].map((t) => r1(inv ? 1 - t : t)).join(';')}" dur="6s" repeatCount="indefinite"/>` : '');
       const [g1, g2] = [one(p.grip[0], ` opacity="1"`), one(p.grip[1], ` opacity="0"`)];
-      const inject = (s, v) => s.replace('>', `>${fade(v)}`);
-      return { under: inject(g1.under, '1;0;1') + inject(g2.under, '0;1;0'), over: inject(g1.over, '1;0;1') + inject(g2.over, '0;1;0') };
+      const inject = (s, inv) => s.replace('>', `>${fade(inv)}`);
+      return { under: inject(g1.under, true) + inject(g2.under, false), over: inject(g1.over, true) + inject(g2.over, false) };
     }
     return one(p.grip || (front ? 'end' : 'neutral'));
   }
-  const a = prj(posOf(A)), b = B ? prj(posOf(B)) : a;
-  const move = animate && B && (a[0] !== b[0] || a[1] !== b[1])
-    ? `<animateTransform attributeName="transform" type="translate" values="${pt2(a)};${pt2(b)};${pt2(a)}" ${ease}/>` : '';
+  const a = prj(posOf(A));
+  const move = animV('transform', FR.map((J) => pt2(prj(posOf(J)))), 'animateTransform', 'type="translate" ');
   const place = (s) => `<g transform="translate(${pt2(a)})">${move}${s}</g>`;
   if (p.t === 'kb') return { under: place(`<path d="M-5.5 5V-.5a5.5 5.5 0 0111 0V5" fill="none" stroke="${L}" stroke-width="5"/><path d="M-5.5 5V-.5a5.5 5.5 0 0111 0V5" fill="none" stroke="${PAL.kb}" stroke-width="2.6"/><circle cx="0" cy="12" r="9" fill="${PAL.kb}" stroke="${L}" stroke-width="1.5"/><path d="M-4 8a5 5 0 014-2" stroke="#6B7280" stroke-width="1.6" fill="none" stroke-linecap="round"/>`), over: '' };
   const M = (x, y, J) => (front ? [J[p.at][0] + 30, 150 - y, 100 - x] : [x - 100, 150 - y, J[p.at][2]]);

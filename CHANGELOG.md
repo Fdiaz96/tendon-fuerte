@@ -2,6 +2,14 @@
 
 Todos los cambios de Tendón Fuerte, del más nuevo al más viejo.
 
+## 1.13.0 — Músculos con proporciones correctas en todo el movimiento
+
+- **Animación por ángulos**: entre la postura inicial y la final se calculan 7 posturas intermedias girando cada articulación. Brazos y piernas ya no se acortan a mitad del movimiento (antes pasaba en el curl, el press o el swing) y el músculo no se achica ni se deforma.
+- **Músculos como zonas reales del cuerpo**: cada uno tiene su lugar y su tamaño (el bíceps adelante del brazo, el tríceps atrás, los extensores en la parte alta del antebrazo, el pecho a los dos lados, los gemelos en la mitad de arriba de la pierna…). Se dibuja solo la parte que se ve y nunca se sale del contorno ni se hincha: su ancho tiene un tope según su largo y cambia de a poco entre fotogramas.
+- **La cámara gira cuando hace falta**: cada ejercicio usa el ángulo que muestra su músculo. Por ejemplo, el peso muerto rumano se ve de tres cuartos de atrás para que se vean glúteos, isquios y zona lumbar. Dominadas y sentadilla sumo también se ven de atrás.
+- **Vista de atrás**: el pelo cubre la nuca y la cara no se dibuja cuando mira para el otro lado.
+- Nuevos tests revisan los 49 ejercicios en cada fotograma: el músculo se ve, no se hincha, no cambia de golpe y los miembros mantienen su largo. Las excepciones son la plancha y las flexiones, donde abdomen y pecho miran al piso.
+
 ## 1.12.0 — Ilustraciones en vista isométrica
 
 - **Todas las ilustraciones pasan a 3D con vista isométrica**: el personaje se ve en tres cuartos, parado sobre una baldosa de piso, con la misma animación fluida de antes.

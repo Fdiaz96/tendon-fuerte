@@ -145,6 +145,22 @@ ok(L('figureSVG(EXERCISES.curl_martillo).includes("#E5262E")') && !L('figureSVG(
 ok(L('figureSVG(EXERCISES.lateral).includes(PAL.db) && figureSVG(EXERCISES.lateral).includes(PAL.floor)'), 'mancuernas en 3D sobre el piso isométrico');
 ok(L('figureSVG(EXERCISES.press_suelo).split(PAL.db).length') > L('figureSVG(EXERCISES.remo_silla).split(PAL.db).length'), 'con las dos manos libres hay dos mancuernas; en el remo a un brazo, una');
 ok(L('Object.values(EXERCISES).every((e) => !/NaN|undefined/.test(figureSVG(e)) && !/NaN|undefined/.test(figureSVG(e, { crop: true })))'), 'ninguna ilustración tiene coordenadas inválidas');
+// Músculos en todas las animaciones: no desaparecen, no se hinchan y los miembros no se acortan entre fotogramas.
+// En plancha y flexiones el pecho y el abdomen miran al piso: la cámara (desde arriba) no los puede mostrar.
+const MUS_EXC = new Set(['plancha abs', 'flexiones chest']);
+const stats = L(`Object.values(EXERCISES).map((e) => [e.id, muscleStats(e)])`);
+const bad = (fn) => stats.flatMap(([id, st]) => st.muscles.filter((m) => !MUS_EXC.has(id + ' ' + m.m) && m.frames.some((p, i) => p && fn(p, m.frames[i - 1]))).map((m) => id + ' ' + m.m));
+let issues = bad((p) => p.vis < 0.15);
+ok(!issues.length, `el músculo trabajado se ve en todos los fotogramas ${issues.join(', ')}`);
+issues = bad((p) => p.w * p.R > 0.32 * p.len || Math.abs(p.o) + p.w > 0.93);
+ok(!issues.length, `los músculos no se hinchan ni se salen del contorno ${issues.join(', ')}`);
+issues = bad((p, prev) => prev && prev.w > 0.1 && Math.abs(p.w * p.R - prev.w * prev.R) > 0.3 * prev.w * prev.R + 0.4);
+ok(!issues.length, `el ancho del músculo cambia de a poco entre fotogramas ${issues.join(', ')}`);
+const lenVar = L(`Object.values(EXERCISES).filter((e) => e.fig.b).map((e) => { const { FR } = framesOf(e.fig); const segs = FR.map((J) => ['ua', 'fa', 'th', 'sh'].map((k) => { const s = segOf(k, J, '1'); return s ? Math.hypot(...sub3(s[1], s[0])) : 0; })); const A = segs[0], B = segs[segs.length - 1]; return [e.id, segs.every((sg) => sg.every((x, k) => x >= Math.min(A[k], B[k]) * 0.98 - 0.05 && x <= Math.max(A[k], B[k]) * 1.02 + 0.05))]; })`);
+issues = lenVar.filter(([, okk]) => !okk).map(([id]) => id);
+ok(!issues.length, `brazos y piernas no se acortan a mitad del movimiento (interpolación por ángulos) ${issues.join(', ')}`);
+ok(L(`figureSVG(EXERCISES.curl_martillo).includes('keyTimes="0;0.083')`), 'la animación usa fotogramas intermedios');
+ok(L(`muscleStats(EXERCISES.rdl).yaw < 0 && muscleStats(EXERCISES.lateral).yaw === 40`), 'la cámara gira para mostrar isquios y glúteos (peso muerto) y queda de frente en el resto');
 ok(Object.values(L('REHAB')).every((p) => L(`EXERCISES['${p[1]}'] && EXERCISES['${p[2]}']`)), 'cada zona tiene ejercicios de fase 1 y 2');
 ok(L('Object.values(REHAB_OPTIONS).every((z) => [1, 2].every((f) => z[f].length && z[f].every((id) => EXERCISES[id] && EXERCISES[id].zone !== undefined || EXERCISES[id].tag)))'), 'las opciones de rehabilitación existen');
 ok(L('Object.entries(REHAB).every(([z, p]) => REHAB_OPTIONS[z][1][0] === p[1] && REHAB_OPTIONS[z][2][0] === p[2])'), 'la primera opción de cada fase es la del protocolo base');

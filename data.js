@@ -354,6 +354,8 @@ Object.entries({
   goblet: { E: 10, W: 4 }, goblet_lenta: { E: 10, W: 4 }, sumo_kb: { E: 9, W: 3 }, swing: { E: 9, W: 3 }, triceps: { E: 9, W: 3 },
   pullover: { E: 10, W: 3 }, puente: { W: 9 }, hip_thrust: { W: 9 },
 }).forEach(([id, z]) => (EXERCISES[id].fig = { ...EXERCISES[id].fig, z }));
+// Cámara a mano donde el ángulo automático no muestra bien el ejercicio: dominadas y sumo, tres cuartos de atrás.
+Object.entries({ dominadas: -65, sumo_kb: -65 }).forEach(([id, cam]) => (EXERCISES[id].fig = { ...EXERCISES[id].fig, cam }));
 
 
 // Cuerpo completo A/B (6 ejercicios por día). Sin banco: press en el suelo y remo apoyado en silla.
