@@ -24,7 +24,7 @@
     <section class="view" id="view-settings" hidden></section>
   </div>
 
-  <nav class="tabbar">
+  <nav class="tabbar" aria-label="Secciones">
     <button data-tab="home" class="on">
       <svg viewBox="0 0 24 24"><path d="M12 3l9 8h-3v9h-5v-6h-2v6H6v-9H3z"/></svg>
       <span>Hoy</span>
@@ -59,8 +59,8 @@
   <dialog id="newssheet" class="sheet"></dialog>
   <dialog id="sumsheet" class="sheet"></dialog>
 
-  <div id="rest" hidden><span id="rest-label">Descanso</span><strong id="rest-time">1:30</strong><button type="button" data-action="skip-rest">Saltar</button></div>
-  <div id="toast" hidden><span></span></div>
+  <div id="rest" role="timer" aria-live="off" hidden><span id="rest-label">Descanso</span><strong id="rest-time">1:30</strong><button type="button" data-action="skip-rest">Saltar</button></div>
+  <div id="toast" role="status" aria-live="polite" hidden><span></span></div>
   <div id="tip" hidden></div>
 
   <script src="data.js"></script>

@@ -1,7 +1,7 @@
 // Tendón Fuerte — rehabilitación de tendones y entreno con mancuernas. Los datos viven solo en el celular (IndexedDB).
 // Protocolo de tendones del video de Jeremy Ethier con Keith Baar y Coach Q; reglas en logic.js, bocetos en figures.js.
 
-const APP_VERSION = '1.10.0';
+const APP_VERSION = '1.10.1';
 const DAY_NAMES = { lu: 'Lu', ma: 'Ma', mi: 'Mi', ju: 'Ju', vi: 'Vi', sa: 'Sá', do: 'Do' };
 const SIDES = { der: 'derecha', izq: 'izquierda', ambos: 'ambos lados' };
 const REST_SECS = 90, ISO_REST = 60;
@@ -872,7 +872,11 @@ function setPath(path, raw) {
   else if (path.startsWith('equip.db.')) { v = Number(String(raw).replace(',', '.')); if (!(v > 0)) return; }
   else if (path === 'profile.days') v = Number(raw);
   o[last] = v;
-  if (path === 'profile.days') syncBudget();
+  if (path === 'profile.days') {
+    syncBudget();
+    if (S.rem.train.length !== v) S.rem.train = { 2: ['lu', 'ju'], 3: ['lu', 'mi', 'vi'] }[v] || S.rem.train;
+    if ($('onb').open) renderOnb();
+  }
   persist();
 }
 
@@ -894,7 +898,8 @@ function renderOnb() {
     <label class="field"><span>Altura (cm)</span><input data-set="profile.height" type="number" inputmode="numeric" value="${esc(p.height)}"></label>
     <label class="field"><span>Edad</span><input data-set="profile.age" type="number" inputmode="numeric" value="${esc(p.age)}"></label>
     <label class="field"><span>Días por semana</span><select data-set="profile.days">${[2, 3].map((d) => `<option ${p.days === d ? 'selected' : ''}>${d}</option>`).join('')}</select></label></div>
-    <span class="small muted">¿Cuánto hace que entrenás con pesas?</span><div class="chips" style="margin-top:4px">${EXPERIENCE.map((x) => `<button class="chip${p.exp === x.id ? ' on' : ''}" data-action="set-exp" data-v="${x.id}">${x.name}</button>`).join('')}</div>`;
+    <span class="small muted">¿Cuánto hace que entrenás con pesas?</span><div class="chips" style="margin-top:4px">${EXPERIENCE.map((x) => `<button class="chip${p.exp === x.id ? ' on' : ''}" data-action="set-exp" data-v="${x.id}">${x.name}</button>`).join('')}</div>
+    <span class="small muted" style="display:block;margin-top:12px">¿Qué días pensás entrenar? (para "hoy toca" y los recordatorios)</span><div class="chips" style="margin-top:4px">${Object.entries(DAY_NAMES).map(([k, v]) => `<button class="chip${S.rem.train.includes(k) ? ' on' : ''}" data-action="rem-day" data-v="${k}">${v}</button>`).join('')}</div>`;
   if (onbStep === 2) body = `<h1>Tu equipo</h1><p class="muted small">La app muestra solo lo que podés hacer y redondea los pesos a lo que tenés.</p><div class="card">${equipFields()}</div>`;
   if (onbStep === 3) body = `<h1>¿Te duele algo?</h1><p class="muted small">Opcional. Marcá las zonas y cuánto duelen hoy al usarlas. El modo dolor queda apagado: lo activás cuando quieras.</p>
     ${ZONES.map((z) => { const zz = S.zones[z.id]; return `<div class="card${zz ? ' pain' : ''}"><div class="row"><div><h3>${esc(z.name)}</h3><p class="muted small">${esc(z.hint)}</p></div><label class="switch"><input type="checkbox" data-action="zone-toggle" data-zone="${z.id}" ${zz ? 'checked' : ''} aria-label="Me duele ${esc(z.name)}"><i></i></label></div>
@@ -1010,7 +1015,7 @@ document.addEventListener('click', (e) => {
     'undo': () => { const f = toastUndo; toastUndo = null; $('toast').hidden = true; f?.(); },
     'set-sex': () => { S.profile.sex = d.v; persist(); $('onb').open ? renderOnb() : render(); },
     'set-exp': () => { S.profile.exp = d.v; persist(); $('onb').open ? renderOnb() : render(); },
-    'rem-day': () => { const t = S.rem.train; S.rem.train = t.includes(d.v) ? t.filter((x) => x !== d.v) : Object.keys(DAY_NAMES).filter((k) => t.includes(k) || k === d.v); persist(); render(); },
+    'rem-day': () => { const t = S.rem.train; S.rem.train = t.includes(d.v) ? t.filter((x) => x !== d.v) : Object.keys(DAY_NAMES).filter((k) => t.includes(k) || k === d.v); persist(); $('onb').open ? renderOnb() : render(); },
     'ics': () => shareFile('tendon-fuerte.ics', icsText(S.rem, S.painMode, today()), 'text/calendar'),
     'export': exportData,
     'import': () => $('import-file').click(),

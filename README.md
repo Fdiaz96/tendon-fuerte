@@ -9,19 +9,17 @@ App web instalable (PWA) para recuperar tendones con isométricos y ganar múscu
 
 ## Funciones
 
-- **Primer uso:** perfil (sexo, peso, altura, edad, experiencia, días por semana), equipo y zonas con dolor (opcional).
-- **Peso sugerido:** se estima con peso corporal × coeficiente del ejercicio, ajustado por sexo, experiencia y edad. La primera vez se sugiere el 70 % y una **serie de calibración** (reps + reps en reserva → 1RM con Epley) fija el peso real. Se redondea a las mancuernas y pesas rusas que tengas.
-- **Entreno:** cuerpo completo A/B, doble progresión 8–12 repeticiones, volumen que sube como mucho 30 % por semana; sugiere pasar de 2 a 3 días cuando venís constante.
-- **Modo dolor (lo activa el usuario):** 6 zonas (codo lateral y medial, muñeca, hombro, rodilla, Aquiles) en 3 fases:
-  1. Isométricos: 3 × 45 s, mañana y noche.
-  2. Isotónicos lentos: 3 × 15 a tempo 3 s / 3 s, día por medio.
-  3. Integración: vuelven los pesos completos y 5–10 min de isométricos al final del entreno.
-  - Registra el dolor 0–10 y al día siguiente pregunta cómo amaneció: dolor ≤ 2 y no peor → sube la carga; > 4 o peor → baja.
-  - En el entreno, los ejercicios que exigen una zona en fase 1–2 van al 60 %, o a una variante amable si la zona está sensible.
-- **Ejercicios del fisio:** se cargan a mano y aparecen en cada sesión de rehabilitación.
-- **Ilustraciones animadas** propias en SVG para cada ejercicio (personaje con remera amarilla, movimiento fluido).
-- **Historial:** gráficos de dolor por zona y de peso por ejercicio.
-- **Recordatorios:** archivo `.ics` para el calendario del teléfono (isométricos diarios y días de entreno).
+Todo el detalle versión por versión está en [CHANGELOG.md](CHANGELOG.md) (también dentro de la app: Ajustes → *Novedades*).
+
+- **Primer uso:** perfil (sexo, peso, altura, edad, experiencia, días y cuáles), equipo y zonas con dolor (opcional).
+- **Equipo a medida:** mancuernas (rango o **discos**, con cálculo de pesos posibles y discos por lado), pesas rusas, aros, banco, barra, bandas y **máquinas propias** con su rango de peso.
+- **Peso sugerido:** estimación por peso corporal × coeficiente del ejercicio (sexo, experiencia y edad), arranque al 70 % y **serie de calibración** (reps + reps en reserva → 1RM con Epley), redondeado a tu equipo.
+- **Entreno:** cuerpo completo A/B **editable** (cambiar, ordenar, agregar, ejercicios propios), 49 ejercicios ilustrados, doble progresión 8–12, volumen +30 % máx por semana, entrada en calor con series de aproximación, detección de estancamiento y semana de descarga.
+- **Modo dolor (lo activa el usuario):** 6 zonas en 3 fases (isométricos → isotónicos lentos → integración), opciones de ejercicio por fase, dolor 0–10 por sesión o en cualquier momento, pregunta "¿cómo amaneció?" y ajuste automático de la carga; en el entreno, tope del 60 % o variante amable.
+- **Sesiones:** temporizador de isométricos manos libres, sonidos, voz opcional, pantalla siempre prendida, descanso configurable, resumen con récords y lo que sube la próxima vez.
+- **Seguimiento:** tarjeta semanal y racha, historial con gráficos de dolor y de peso, **informe para el fisio** (HTML imprimible).
+- **Ilustraciones animadas** propias en SVG (personaje con remera amarilla), sin imágenes de terceros.
+- **Otros:** recordatorios `.ics`, copia de seguridad JSON, tema oscuro o claro, instalación guiada, funciona sin conexión.
 
 ## Fuentes
 
@@ -34,10 +32,11 @@ No es un consejo médico: ante dolor agudo, hinchazón o pérdida de fuerza, con
 
 | Archivo | Qué tiene |
 |---|---|
-| `data.js` | Zonas, ejercicios con sus bocetos, plantillas A/B |
-| `logic.js` | Reglas puras: pesos, calibración, progresión, modo dolor, volumen, calendario |
+| `data.js` | Zonas, ejercicios con sus posturas, opciones de rehabilitación, plantillas A/B |
+| `logic.js` | Reglas puras: equipo y discos, pesos, calibración, progresión, modo dolor, volumen, estancamiento, semana y racha, calendario |
 | `figures.js` | Dibujo y animación de las ilustraciones |
-| `app.js` | Pantallas, sesiones y guardado |
+| `app.js` | Pantallas, sesiones, editor de rutina, informe, sonidos y guardado |
+| `CHANGELOG.md` | Cambios por versión (se muestra en la app) |
 | `sw.js` | Caché para usarla sin conexión |
 
 ## Pruebas

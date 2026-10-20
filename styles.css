@@ -60,6 +60,7 @@ button.link { color: var(--acc-fg); font-weight: 600; padding: 6px 2px; }
 .pain button.link { color: var(--pain-fg); }
 button.danger { color: var(--danger); }
 button:disabled { opacity: .4; cursor: default; }
+button:focus-visible, .chip:focus-visible, a:focus-visible, summary:focus-visible { outline: 2px solid var(--acc-fg); outline-offset: 2px; }
 .btns { display: flex; gap: 8px; flex-wrap: wrap; }
 .btns > * { flex: 1; }
 

@@ -2,6 +2,12 @@
 
 Todos los cambios de Tendón Fuerte, del más nuevo al más viejo.
 
+## 1.10.1 — Días de entreno en el primer uso y accesibilidad
+
+- En el primer uso ahora elegís **qué días entrenás** (se usan para "hoy toca entrenar" y los recordatorios). Al pasar de 2 a 3 días se proponen lunes, miércoles y viernes.
+- **Accesibilidad**: los avisos se anuncian en lectores de pantalla, el foco del teclado se ve claramente y la barra de pestañas tiene nombre.
+- README actualizado con todas las funciones.
+
 ## 1.10.0 — Tema claro
 
 - **Tema claro opcional** (Ajustes → *Tema*): Oscuro (sigue siendo el predeterminado), Claro o Según el sistema. El claro se lee mejor a pleno sol.
