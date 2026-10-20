@@ -1,7 +1,7 @@
 // Tendón Fuerte — rehabilitación de tendones y entreno con mancuernas. Los datos viven solo en el celular (IndexedDB).
 // Protocolo de tendones del video de Jeremy Ethier con Keith Baar y Coach Q; reglas en logic.js, bocetos en figures.js.
 
-const APP_VERSION = '1.10.1';
+const APP_VERSION = '1.11.0';
 const DAY_NAMES = { lu: 'Lu', ma: 'Ma', mi: 'Mi', ju: 'Ju', vi: 'Vi', sa: 'Sá', do: 'Do' };
 const SIDES = { der: 'derecha', izq: 'izquierda', ambos: 'ambos lados' };
 const REST_SECS = 90, ISO_REST = 60;
@@ -355,6 +355,7 @@ function openExercise(id) {
   dlg('exsheet').html = `<div class="dlg"><div class="dlg-head"><strong>${esc(ex.name)}</strong><button class="link" data-action="close" data-dlg="exsheet">Cerrar</button></div>
     <div class="hero-fig">${figureSVG(ex)}</div>
     <ul class="muted">${ex.cues.map((c) => `<li>${esc(c)}</li>`).join('')}</ul>
+    ${ex.mus?.length ? `<p class="small"><span class="mus-dot"></span>Trabaja: ${ex.mus.map((m) => MUSCLE_NAMES[m]).join(', ')}</p>` : ''}
     ${ex.tag?.length ? `<p class="small muted">Exige: ${ex.tag.map(zoneName).join(', ')}</p>` : ''}
     ${lift ? `<p>Peso de trabajo: <b class="num">${fmtKg(lift.w)}</b>${lift.e1rm ? ` · 1RM estimado ${lift.e1rm} kg` : ''}</p>` : ''}
     ${hist.length > 1 ? `<h2>Progreso</h2>${lineChart(hist, { unit: 'kg', color: 'var(--acc)' })}` : ''}

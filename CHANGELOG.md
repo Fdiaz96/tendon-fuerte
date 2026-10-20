@@ -2,6 +2,13 @@
 
 Todos los cambios de Tendón Fuerte, del más nuevo al más viejo.
 
+## 1.11.0 — Ilustraciones más limpias y músculo en rojo
+
+- **Contornos limpios**: cada brazo, pierna, torso y cabeza se dibuja como una sola silueta, sin las líneas que se cruzaban en codos, rodillas, mangas y short.
+- **Mancuernas bien orientadas**: con palmas abajo o arriba (elevación lateral, press, peso muerto rumano, extensión de muñeca…) la mancuerna se ve de punta, con sus discos; con agarre neutro (curl martillo, remos, zancadas) se ve de costado y **gira con el antebrazo** durante el movimiento. En la pronación y supinación pasa de una vista a la otra.
+- **El músculo que trabajás se ilumina en rojo** y se intensifica en la contracción (en los isométricos, late suave). En el detalle del ejercicio aparece "Trabaja: …".
+- Cabeza con orejas de frente y sin detalles confusos de perfil; manos, toalla y kettlebell con trazos más definidos.
+
 ## 1.10.1 — Días de entreno en el primer uso y accesibilidad
 
 - En el primer uso ahora elegís **qué días entrenás** (se usan para "hoy toca entrenar" y los recordatorios). Al pasar de 2 a 3 días se proponen lunes, miércoles y viernes.

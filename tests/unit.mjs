@@ -140,6 +140,10 @@ ok(!L(`icsText({ am: '08:00', pm: '20:00', train: [], trainAt: '19:00' }, false,
 const ids = L('Object.keys(EXERCISES)');
 ok(ids.every((id) => L(`figureSVG(EXERCISES.${id}).startsWith('<svg')`)), `los ${ids.length} ejercicios tienen ilustración`);
 ok(L('figureSVG(EXERCISES.goblet).includes("<animate")') && !L('figureSVG(EXERCISES.goblet, { animate: false }).includes("<animate")'), 'ilustraciones animadas y estáticas');
+ok(ids.every((id) => L(`EXERCISES.${id}.mus.length && EXERCISES.${id}.mus.every((m) => MUSCLE_NAMES[m])`)), 'cada ejercicio dice qué músculos trabaja');
+ok(L('figureSVG(EXERCISES.curl_martillo).includes("#E5262E")') && !L('figureSVG(EXERCISES.curl_martillo, { muscles: false }).includes("#E5262E")'), 'el músculo trabajado se ilumina en rojo (y se puede apagar)');
+ok(L('(figureSVG(EXERCISES.lateral).match(/<circle/g) || []).length') > L('(figureSVG(EXERCISES.curl_martillo).match(/<circle/g) || []).length'), 'en la elevación lateral la mancuerna se ve de punta (discos)');
+ok(L('figureSVG(EXERCISES.curl_martillo).includes("type=\\"rotate\\"")'), 'en el curl martillo la mancuerna gira con el antebrazo');
 ok(Object.values(L('REHAB')).every((p) => L(`EXERCISES['${p[1]}'] && EXERCISES['${p[2]}']`)), 'cada zona tiene ejercicios de fase 1 y 2');
 ok(L('Object.values(REHAB_OPTIONS).every((z) => [1, 2].every((f) => z[f].length && z[f].every((id) => EXERCISES[id] && EXERCISES[id].zone !== undefined || EXERCISES[id].tag)))'), 'las opciones de rehabilitación existen');
 ok(L('Object.entries(REHAB).every(([z, p]) => REHAB_OPTIONS[z][1][0] === p[1] && REHAB_OPTIONS[z][2][0] === p[2])'), 'la primera opción de cada fase es la del protocolo base');
