@@ -2,11 +2,13 @@
 
 Todos los cambios de Tendón Fuerte, del más nuevo al más viejo.
 
-## 1.13.6 — Fin de la revisión de animaciones
+## 1.13.7 — Vuelve la página de prueba de animaciones
 
-- Las 49 animaciones quedaron revisadas y aprobadas: se borró la página temporal `animaciones.html`.
+- Se restauró la página temporal `animaciones.html` (se había borrado en la 1.13.6 antes de terminar la revisión) para seguir revisando las animaciones.
 
 ## 1.13.6 — Pronación y supinación con giro real
+
+- Se borró la página temporal `animaciones.html` (por error, antes de terminar la revisión; vuelve en la 1.13.7).
 
 - En **Pronación y supinación lenta** la mancuerna ya no aparece y desaparece: gira alrededor del antebrazo, de palma abajo a palma arriba, pasando por la posición vertical, y vuelve. El disco que queda adelante cambia en el momento justo del giro.
 
