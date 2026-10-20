@@ -74,7 +74,7 @@ const EXERCISES = {
   lateral_lenta: {
     name: 'Elevación lateral lenta', kind: 'lento', impl: 'db', load0: 2, zone: 'hombro',
     cues: ['De pie, brazos al costado, codos apenas flexionados.', 'Subí hasta la altura de los hombros en 3 s y bajá en 3 s.'],
-    fig: { front: true, a: { N: [100, 45], P: [100, 88], E1: [93, 69], W1: [91, 92], E2: [107, 69], W2: [109, 92], K1: [94, 119], F1: [93, 150], K2: [106, 119], F2: [107, 150] }, b: { E1: [77, 50], W1: [55, 52], E2: [123, 50], W2: [145, 52] }, props: [{ t: 'db', at: 'W1' }, { t: 'db', at: 'W2' }], dur: 6 },
+    fig: { front: true, a: { N: [100, 45], P: [100, 88], E1: [93, 69], W1: [91, 92], E2: [107, 69], W2: [109, 92], K1: [94, 119], F1: [93, 150], K2: [106, 119], F2: [107, 150] }, b: { E1: [68, 50], W1: [45, 51], E2: [132, 50], W2: [155, 51] }, props: [{ t: 'db', at: 'W1' }, { t: 'db', at: 'W2' }], dur: 6 },
   },
   sentadilla_pared: {
     name: 'Sentadilla isométrica en pared', kind: 'iso', impl: 'bw', zone: 'rodilla',

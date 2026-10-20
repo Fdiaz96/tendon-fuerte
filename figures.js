@@ -198,17 +198,18 @@ function patchesOver(f, def, FR, n) {
 }
 // Ángulo de cámara para un ejercicio: el que mejor muestra sus músculos (lado cercano) en todos los fotogramas,
 // sin perder del todo la cara. Se prefiere el habitual (40°) si no hay motivo para girar.
-const CAM_YAWS = [40, 15, -15, -40, -65];
+const CAM_YAWS = [40, 15, -15, -40, -65], CAM_YAWS_FRONT = [65, 80, 50];   // los dibujados de frente, más de frente
 const camCache = new Map();
 function pickCam(ex, FR) {
   if (ex.fig.cam != null) return ex.fig.cam;
   const key = ex.id ? ex.id + JSON.stringify(ex.fig.a) : null;
   if (key && camCache.has(key)) return camCache.get(key);
   const defs = (ex.mus || []).flatMap((m) => MUS[m] || []);
-  let best = 40, bestScore = -Infinity;
-  for (const yaw of CAM_YAWS) {
+  const yaws = ex.fig.front ? CAM_YAWS_FRONT : CAM_YAWS;
+  let best = yaws[0], bestScore = -Infinity;
+  for (const yaw of yaws) {
     CAM = camera(yaw);
-    let score = yaw === 40 ? 0.6 : 0;
+    let score = yaw === yaws[0] ? 0.6 : 0;
     for (const J of FR) {
       for (const def of defs) { const v = patch(ex.fig, def, J, '1')?.vis ?? 1; score += v < 0.15 ? -3 : Math.min(v, 0.8); }
       score += 0.25 * dot3(J.fw, CAM.v);
@@ -404,7 +405,7 @@ function sceneBoxes(s, front, A) {
 // Mancuerna según el agarre: 'end' con el mango hacia los costados (palmas abajo o arriba), 'neutral' perpendicular al
 // antebrazo, 'along' a lo largo del antebrazo. Con dos agarres (p. ej. ['end', 'neutral']) pasa de uno al otro.
 function handleDir(grip, J, n, front) {
-  if (grip === 'end') return [0, 0, 1];
+  if (grip === 'end') return front ? [1, 0, 0] : [0, 0, 1];   // de punta: hacia quien mira en el dibujo original
   const d = unit3(sub3(J['W' + n], J['E' + n]));
   if (grip === 'along') return d;
   const a = [-d[1], d[0], 0];

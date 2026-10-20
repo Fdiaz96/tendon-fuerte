@@ -2,6 +2,12 @@
 
 Todos los cambios de Tendón Fuerte, del más nuevo al más viejo.
 
+## 1.13.2 — Elevación lateral corregida
+
+- **Elevación lateral** (y la versión lenta de rehabilitación): los brazos ahora se abren hacia los costados hasta la altura de los hombros, como una T. Antes se iban hacia adelante, se veían torcidos y el brazo de atrás quedaba encima de la cabeza.
+- Las mancuernas de los ejercicios dibujados de frente ahora quedan bien orientadas, con las palmas hacia abajo y el mango hacia adelante. Antes estaban giradas.
+- Los ejercicios dibujados de frente (elevación lateral, rotaciones externas, Tyler twist) usan una cámara más frontal para que el movimiento se entienda.
+
 ## 1.13.1 — Página de prueba de animaciones (temporal)
 
 - Página `animaciones.html` con los 49 ejercicios animados a la vez, con su nombre, el ángulo de cámara y los músculos que trabajan. Sirve para revisar las animaciones y se va a borrar cuando terminemos de ajustarlas.
