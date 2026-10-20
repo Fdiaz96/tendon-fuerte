@@ -349,6 +349,12 @@ Object.entries({
   along: ['triceps', 'pullover'],
 }).forEach(([g, ids]) => ids.forEach((id) => EXERCISES[id].fig.props.forEach((p) => p.t === 'db' && (p.grip = g))));
 EXERCISES.prono_lenta.fig.props[0].grip = ['end', 'neutral'];
+// Manos juntas (una sola pesa con las dos manos) o apoyadas en la cadera: distancia de codos y manos al centro del cuerpo.
+Object.entries({
+  goblet: { E: 10, W: 4 }, goblet_lenta: { E: 10, W: 4 }, sumo_kb: { E: 9, W: 3 }, swing: { E: 9, W: 3 }, triceps: { E: 9, W: 3 },
+  pullover: { E: 10, W: 3 }, puente: { W: 9 }, hip_thrust: { W: 9 },
+}).forEach(([id, z]) => (EXERCISES[id].fig = { ...EXERCISES[id].fig, z }));
+
 
 // Cuerpo completo A/B (6 ejercicios por día). Sin banco: press en el suelo y remo apoyado en silla.
 const TEMPLATES = {

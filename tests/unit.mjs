@@ -142,8 +142,9 @@ ok(ids.every((id) => L(`figureSVG(EXERCISES.${id}).startsWith('<svg')`)), `los $
 ok(L('figureSVG(EXERCISES.goblet).includes("<animate")') && !L('figureSVG(EXERCISES.goblet, { animate: false }).includes("<animate")'), 'ilustraciones animadas y estáticas');
 ok(ids.every((id) => L(`EXERCISES.${id}.mus.length && EXERCISES.${id}.mus.every((m) => MUSCLE_NAMES[m])`)), 'cada ejercicio dice qué músculos trabaja');
 ok(L('figureSVG(EXERCISES.curl_martillo).includes("#E5262E")') && !L('figureSVG(EXERCISES.curl_martillo, { muscles: false }).includes("#E5262E")'), 'el músculo trabajado se ilumina en rojo (y se puede apagar)');
-ok(L('(figureSVG(EXERCISES.lateral).match(/<circle/g) || []).length') > L('(figureSVG(EXERCISES.curl_martillo).match(/<circle/g) || []).length'), 'en la elevación lateral la mancuerna se ve de punta (discos)');
-ok(L('figureSVG(EXERCISES.curl_martillo).includes("type=\\"rotate\\"")'), 'en el curl martillo la mancuerna gira con el antebrazo');
+ok(L('figureSVG(EXERCISES.lateral).includes(PAL.db) && figureSVG(EXERCISES.lateral).includes(PAL.floor)'), 'mancuernas en 3D sobre el piso isométrico');
+ok(L('figureSVG(EXERCISES.press_suelo).split(PAL.db).length') > L('figureSVG(EXERCISES.remo_silla).split(PAL.db).length'), 'con las dos manos libres hay dos mancuernas; en el remo a un brazo, una');
+ok(L('Object.values(EXERCISES).every((e) => !/NaN|undefined/.test(figureSVG(e)) && !/NaN|undefined/.test(figureSVG(e, { crop: true })))'), 'ninguna ilustración tiene coordenadas inválidas');
 ok(Object.values(L('REHAB')).every((p) => L(`EXERCISES['${p[1]}'] && EXERCISES['${p[2]}']`)), 'cada zona tiene ejercicios de fase 1 y 2');
 ok(L('Object.values(REHAB_OPTIONS).every((z) => [1, 2].every((f) => z[f].length && z[f].every((id) => EXERCISES[id] && EXERCISES[id].zone !== undefined || EXERCISES[id].tag)))'), 'las opciones de rehabilitación existen');
 ok(L('Object.entries(REHAB).every(([z, p]) => REHAB_OPTIONS[z][1][0] === p[1] && REHAB_OPTIONS[z][2][0] === p[2])'), 'la primera opción de cada fase es la del protocolo base');

@@ -18,7 +18,7 @@ Todo el detalle versión por versión está en [CHANGELOG.md](CHANGELOG.md) (tam
 - **Modo dolor (lo activa el usuario):** 6 zonas en 3 fases (isométricos → isotónicos lentos → integración), opciones de ejercicio por fase, dolor 0–10 por sesión o en cualquier momento, pregunta "¿cómo amaneció?" y ajuste automático de la carga; en el entreno, tope del 60 % o variante amable.
 - **Sesiones:** temporizador de isométricos manos libres, sonidos, voz opcional, pantalla siempre prendida, descanso configurable, resumen con récords y lo que sube la próxima vez.
 - **Seguimiento:** tarjeta semanal y racha, historial con gráficos de dolor y de peso, **informe para el fisio** (HTML imprimible).
-- **Ilustraciones animadas** propias en SVG (personaje con remera amarilla, contorno limpio, mancuernas bien orientadas y el músculo trabajado en rojo), sin imágenes de terceros.
+- **Ilustraciones animadas** propias en SVG con **vista isométrica 3D** (personaje con remera amarilla, contorno limpio, mancuernas bien orientadas y el músculo trabajado en rojo), sin imágenes de terceros.
 - **Otros:** recordatorios `.ics`, copia de seguridad JSON, tema oscuro o claro, instalación guiada, funciona sin conexión.
 
 ## Fuentes

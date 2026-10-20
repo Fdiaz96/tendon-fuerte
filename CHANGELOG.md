@@ -2,6 +2,15 @@
 
 Todos los cambios de Tendón Fuerte, del más nuevo al más viejo.
 
+## 1.12.0 — Ilustraciones en vista isométrica
+
+- **Todas las ilustraciones pasan a 3D con vista isométrica**: el personaje se ve en tres cuartos, parado sobre una baldosa de piso, con la misma animación fluida de antes.
+- Las posturas se calculan en 3D y se proyectan con una cámara fija. Brazos, piernas, torso y cabeza se ordenan por profundidad, así que el lado cercano tapa al lejano de forma natural.
+- **Silla, banco, barra de dominadas, pared, columna y máquina** ahora son objetos con volumen.
+- **Mancuernas en 3D**: discos con espesor y mango orientado según el agarre. Cuando trabajan los dos brazos se ven las dos mancuernas, y en los ejercicios a un brazo, una sola.
+- **Cara en tres cuartos**: pelo que cubre arriba y atrás, ojos, cejas, nariz, boca y oreja. Se nota hacia dónde mira aunque esté acostado o inclinado.
+- El músculo trabajado sigue iluminado en rojo y se acomoda al lado que ve la cámara.
+
 ## 1.11.1 — Cara con expresión: se ve hacia dónde mira
 
 - **De perfil**: nariz que sobresale del contorno, ojo, ceja, boca y oreja. Así se ve hacia dónde mira aunque esté acostado, inclinado o boca abajo.
