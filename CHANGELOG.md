@@ -2,6 +2,10 @@
 
 Todos los cambios de Tendón Fuerte, del más nuevo al más viejo.
 
+## 1.13.6 — Fin de la revisión de animaciones
+
+- Las 49 animaciones quedaron revisadas y aprobadas: se borró la página temporal `animaciones.html`.
+
 ## 1.13.5 — Ningún músculo desaparece
 
 - Cuando el músculo trabajado mira para el lado contrario a la cámara (el abdomen en la plancha o el pecho en las flexiones, que miran al piso), el rojo se asoma por el borde del cuerpo más cercano en lugar de desaparecer.
