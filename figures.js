@@ -148,6 +148,10 @@ function propSVG(p, A, B, anim, ease, animate) {
     shape = `<g transform="rotate(${rot[0]})">${spin}<rect x="-9" y="-1.8" width="18" height="3.6" rx="1" fill="${PAL.bar}" stroke="${L}" stroke-width="1.1"/>${plate(-14)}${plate(8)}</g>`;
   }
   if (p.t === 'kb') shape = `<path d="M-5.5 5V-.5a5.5 5.5 0 0111 0V5" fill="none" stroke="${L}" stroke-width="5"/><path d="M-5.5 5V-.5a5.5 5.5 0 0111 0V5" fill="none" stroke="${PAL.kb}" stroke-width="2.6"/><circle cx="0" cy="12" r="9" fill="${PAL.kb}" stroke="${L}" stroke-width="1.4"/><path d="M-4 8a5 5 0 014-2" stroke="#6B7280" stroke-width="1.6" fill="none" stroke-linecap="round"/>`;
+  if (p.t === 'towel') {   // toalla enrollada entre las dos manos
+    const c = A[p.to], e = B?.[p.to] || c;
+    return `<line x1="${a[0]}" y1="${a[1]}" x2="${c[0]}" y2="${c[1]}" stroke="${L}" stroke-width="9" stroke-linecap="round">${anim('x1', a[0], b[0])}${anim('y1', a[1], b[1])}${anim('x2', c[0], e[0])}${anim('y2', c[1], e[1])}</line><line x1="${a[0]}" y1="${a[1]}" x2="${c[0]}" y2="${c[1]}" stroke="#7FB3D5" stroke-width="6.5" stroke-linecap="round" stroke-dasharray="3 2">${anim('x1', a[0], b[0])}${anim('y1', a[1], b[1])}${anim('x2', c[0], e[0])}${anim('y2', c[1], e[1])}</line>`;
+  }
   if (p.t === 'band') {
     const band = `<line x1="${p.x}" y1="${p.y}" x2="${a[0]}" y2="${a[1]}" stroke="#E5484D" stroke-width="3" stroke-linecap="round">${anim('x2', a[0], b[0])}${anim('y2', a[1], b[1])}</line>`;
     return `${band}<circle cx="${p.x}" cy="${p.y}" r="3" fill="#E5484D" stroke="${L}" stroke-width="1"/>`;

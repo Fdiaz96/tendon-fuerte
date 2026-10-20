@@ -2,6 +2,18 @@
 
 Todos los cambios de Tendón Fuerte, del más nuevo al más viejo.
 
+## 1.8.0 — Opciones de rehabilitación
+
+- **Elegí el ejercicio de rehabilitación** de cada zona y fase (Tendones → tu zona → *Otras opciones para esta fase*). La primera opción sigue siendo la del protocolo del video.
+- **5 ejercicios de rehabilitación nuevos con ilustración**:
+  - **Codo de tenista, fase 2**: *excéntrico de muñeca* (subís con ayuda y bajás en 4 s) y *Tyler twist con toalla* (sin necesidad de Flexbar).
+  - **Hombro, fase 1**: *rotación externa isométrica* contra un marco de puerta. Fase 2: *rotación externa con banda*.
+  - **Rodilla, fase 1**: *extensión de rodilla isométrica sentado*.
+  - **Aquiles, fase 1**: *gemelos isométrico sentado*, por si de pie molesta demasiado.
+  - **Muñeca, fase 2**: también se puede usar la extensión de muñeca lenta.
+- Solo aparecen las opciones que podés hacer con tu equipo. Al cambiar de ejercicio, la carga vuelve a empezar desde lo mínimo.
+- La entrada en calor, el informe para el fisio y las sesiones usan el ejercicio que elegiste.
+
 ## 1.7.1 — Pulido
 
 - **Deshacer**: al eliminar una sesión del historial aparece "Deshacer" durante 6 segundos (ya no pregunta antes).

@@ -131,6 +131,8 @@ const ids = L('Object.keys(EXERCISES)');
 ok(ids.every((id) => L(`figureSVG(EXERCISES.${id}).startsWith('<svg')`)), `los ${ids.length} ejercicios tienen ilustración`);
 ok(L('figureSVG(EXERCISES.goblet).includes("<animate")') && !L('figureSVG(EXERCISES.goblet, { animate: false }).includes("<animate")'), 'ilustraciones animadas y estáticas');
 ok(Object.values(L('REHAB')).every((p) => L(`EXERCISES['${p[1]}'] && EXERCISES['${p[2]}']`)), 'cada zona tiene ejercicios de fase 1 y 2');
+ok(L('Object.values(REHAB_OPTIONS).every((z) => [1, 2].every((f) => z[f].length && z[f].every((id) => EXERCISES[id] && EXERCISES[id].zone !== undefined || EXERCISES[id].tag)))'), 'las opciones de rehabilitación existen');
+ok(L('Object.entries(REHAB).every(([z, p]) => REHAB_OPTIONS[z][1][0] === p[1] && REHAB_OPTIONS[z][2][0] === p[2])'), 'la primera opción de cada fase es la del protocolo base');
 ok(Object.values(L('TEMPLATES')).flat().every((id) => L(`!!EXERCISES['${id}']`)), 'las plantillas usan ejercicios existentes');
 
 console.log(failures ? `\n${failures} fallaron` : '\nTodo OK');

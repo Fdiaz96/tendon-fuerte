@@ -278,6 +278,42 @@ Object.assign(EXERCISES, {
     fig: { a: { N: [60, 143], P: [103, 143], E1: [62, 121], W1: [62, 98], K1: [104, 112], F1: [128, 112] }, b: { E1: [46, 126], W1: [26, 124], K1: [128, 134], F1: [156, 140] }, dur: 3.4 },
   },
 });
+// Rehabilitación: alternativas por zona y fase (el usuario elige; la primera es la del video).
+Object.assign(EXERCISES, {
+  iso_rot_ext_pared: {
+    name: 'Rotación externa isométrica contra la pared', kind: 'iso', impl: 'bw', zone: 'hombro',
+    cues: ['De pie al lado de un marco de puerta, codo pegado al cuerpo a 90°.', 'Empujá el dorso de la mano hacia afuera contra el marco, sin mover el brazo.', 'Fuerza moderada (50–70 %); dolor hasta 3–4 sobre 10.'],
+    fig: { front: true, a: { N: [100, 45], P: [100, 88], E1: [87, 71], W1: [76, 76], E2: [113, 69], W2: [115, 92], K1: [94, 119], F1: [93, 150], K2: [106, 119], F2: [107, 150] }, scene: [{ t: 'wall', x: 72, left: true }] },
+  },
+  iso_rodilla_sentado: {
+    name: 'Extensión de rodilla isométrica sentado', kind: 'iso', impl: 'bw', zone: 'rodilla',
+    cues: ['Sentado, estirá la rodilla hasta que la pierna quede casi horizontal y sostené.', 'Para más carga: una banda atada a la pata de la silla o una tobillera con peso.', 'Dolor hasta 3–4 sobre 10.'],
+    fig: { a: { ...SEATED, K1: [128, 110], F1: [154, 118], T1: [161, 110] }, scene: [CHAIR_SEAT] },
+  },
+  iso_gemelo_sentado: {
+    name: 'Gemelos isométrico sentado', kind: 'iso', impl: 'db', load0: 2, zone: 'aquiles',
+    cues: ['Sentado, talones levantados, mancuerna apoyada sobre las rodillas.', 'Sostené arriba sin moverte.', 'Buena opción si de pie molesta demasiado.'],
+    fig: { a: { ...SEATED, F1: [130, 142], T1: [138, 150], F2: [126, 142], T2: [134, 150], E1: [116, 96], W1: [126, 104] }, props: [{ t: 'db', at: 'W1' }], scene: [CHAIR_SEAT] },
+  },
+  excentrico_muneca: {
+    name: 'Excéntrico de muñeca', kind: 'lento', impl: 'db', load0: 2, zone: 'codo_lat',
+    cues: ['Antebrazo apoyado en el muslo, palma hacia abajo.', 'Subí la mano ayudándote con la otra y bajala sola en 4 s.', 'Clásico para codo de tenista: la bajada es lo que cuenta.'],
+    fig: { a: { ...SEATED, W1: [133, 90] }, b: { ...SEATED, W1: [132, 112] }, props: [{ t: 'db', at: 'W1' }], scene: [CHAIR_SEAT], dur: 5 },
+  },
+  tyler_toalla: {
+    name: 'Tyler twist con toalla', kind: 'lento', impl: 'bw', zone: 'codo_lat',
+    cues: ['Toalla enrollada con las dos manos, brazos adelante.', 'Retorcé la toalla con la mano sana y dejá que la del codo afectado ceda despacio (4 s).', 'Sin Flexbar: la toalla bien enrollada funciona parecido.'],
+    fig: { front: true, a: { N: [100, 45], P: [100, 88], E1: [86, 74], W1: [80, 88], E2: [114, 74], W2: [120, 88], K1: [94, 119], F1: [93, 150], K2: [106, 119], F2: [107, 150] }, b: { W1: [81, 84], W2: [119, 92] }, props: [{ t: 'towel', at: 'W1', to: 'W2' }], dur: 5 },
+  },
+});
+const REHAB_OPTIONS = {
+  codo_lat: { 1: ['iso_ext_muneca'], 2: ['ext_muneca_lenta', 'excentrico_muneca', 'tyler_toalla'] },
+  codo_med: { 1: ['iso_flex_muneca'], 2: ['flex_muneca_lenta'] },
+  muneca: { 1: ['iso_prono'], 2: ['prono_lenta', 'ext_muneca_lenta'] },
+  hombro: { 1: ['iso_pared', 'iso_rot_ext_pared'], 2: ['lateral_lenta', 'rot_ext_banda'] },
+  rodilla: { 1: ['sentadilla_pared', 'iso_rodilla_sentado'], 2: ['goblet_lenta'] },
+  aquiles: { 1: ['iso_talones', 'iso_gemelo_sentado'], 2: ['talones_lenta'] },
+};
 // Categorías para elegir reemplazos en el editor de rutina.
 const CATS = { piernas: 'Piernas', empuje: 'Empuje', tiron: 'Tirón', bisagra: 'Cadera', hombro: 'Hombro', brazos: 'Brazos', core: 'Core' };
 Object.entries({

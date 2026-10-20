@@ -136,8 +136,14 @@ await click('[data-action="check"][data-zone="codo_lat"][data-val="igual"]');
 ok((await state()).zones.codo_lat.secs === 35, 'codo ya ajustado ayer → no vuelve a bajar');
 ok(await page.locator('[data-action="check"]').count() === 0, 'no vuelve a preguntar');
 
-// 7. Ejercicio propio del fisio
+// 7. Ejercicio propio del fisio (y elegir otra opción de rehabilitación)
 await click('[data-tab="tendons"]');
+await page.evaluate(() => { S.zones.codo_lat.phase = 2; render(); });
+await click('#view-tendons [data-action="rehab-choice"][data-zone="codo_lat"][data-ex="tyler_toalla"]');
+ok((await state()).zones.codo_lat.choice[2] === 'tyler_toalla', 'elige Tyler twist con toalla para la fase 2 del codo');
+ok(await page.locator('#view-tendons >> text=Tyler twist con toalla').count() >= 1, 'la tarjeta muestra la opción elegida');
+await shot('20-opciones-rehab');
+await page.evaluate(() => { S.zones.codo_lat.phase = 1; render(); });
 await click('[data-action="custom-edit"]');
 await page.fill('#c-name', 'Tyler twist con toalla'); await page.selectOption('#c-zone', 'codo_lat');
 await click('[data-action="custom-save"]');
