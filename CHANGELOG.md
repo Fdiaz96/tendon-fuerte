@@ -2,6 +2,17 @@
 
 Todos los cambios de Tendón Fuerte, del más nuevo al más viejo.
 
+## 1.5.0 — Entrada en calor e informe para el fisio
+
+- **Entrada en calor** al empezar cada entreno, con casillas para tildar:
+  - movilidad general de 3–5 min;
+  - con el modo dolor, **un isométrico de cada zona sensible** antes de cargar (suele bajar el dolor para entrenar);
+  - **series de aproximación** del primer ejercicio con peso: 8 reps al 50 % y 4 al 75 %, redondeadas a tu equipo (no cuentan para el volumen).
+- **Informe para el fisio** (Historial → *Informe para el fisio*): un archivo HTML para compartir o imprimir como PDF con las últimas 6 semanas:
+  - por zona: fase actual y desde cuándo, ejercicio y carga, gráfico de dolor, tabla de dolor promedio y máximo por semana, y cómo amaneció al día siguiente;
+  - cantidad de sesiones de rehab y entrenos;
+  - los ejercicios que te indicó el fisio.
+
 ## 1.4.0 — Progreso y motivación
 
 - **Resumen al terminar el entreno**: minutos, series y volumen (kg × reps) en números grandes.

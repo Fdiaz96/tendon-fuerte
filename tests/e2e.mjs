@@ -19,6 +19,7 @@ const toastText = () => page.locator('#toast span').textContent();
 const state = () => page.evaluate(() => JSON.parse(JSON.stringify(S)));
 const click = async (sel) => { await page.click(sel); await page.waitForTimeout(80); };
 
+let dl;
 // 1. Primer uso
 await page.goto(URL);
 await page.evaluate(() => new Promise((r) => { const q = indexedDB.deleteDatabase('tendon-fuerte'); q.onsuccess = q.onerror = q.onblocked = r; }));
@@ -73,7 +74,10 @@ await shot('08-tendones');
 await click('[data-tab="home"]');
 await click('#view-home [data-action="start-workout"]');
 await page.waitForSelector('#wsheet[open]');
-const first = page.locator('#wsheet .card').first();
+ok((await page.locator('#wsheet .warm').textContent()).includes('Isométrico de codo lateral'), 'la entrada en calor incluye el isométrico de la zona sensible');
+await click('#wsheet [data-action="warm"][data-i="0"]');
+ok(await page.locator('#wsheet .warm-item.on').count() === 1, 'marca un ítem de la entrada en calor');
+const first = page.locator('#wsheet .card:not(.warm)').first();
 ok((await first.textContent()).includes('Serie de calibración'), 'el primer entreno pide calibrar');
 ok((await first.locator('input[data-w="0.0.w"]').inputValue()) === '12', 'goblet arranca con la pesa rusa de 12');
 await first.locator('input[data-w="0.0.reps"]').fill('20');
@@ -83,7 +87,7 @@ ok((await toastText()).includes('Calibrado'), 'calcula el peso de trabajo');
 ok(!(await page.locator('#rest').isHidden()), 'arranca el descanso');
 await shot('09-entreno-sesion');
 await click('#rest [data-action="skip-rest"]');
-const row = page.locator('#wsheet .card').nth(2);
+const row = page.locator('#wsheet .card:not(.warm)').nth(2);
 ok((await row.textContent()).includes('Modo dolor'), 'el remo avisa el modo dolor');
 await row.locator('input[data-w="2.0.reps"]').fill('12');
 await row.locator('select[data-w="2.0.rir"]').selectOption('3');
@@ -189,10 +193,17 @@ ok((await page.locator('#newssheet').textContent()).includes('1.3.0'), 'Novedade
 await shot('17-novedades');
 await click('#newssheet [data-action="close"]');
 
+// 8d. Informe para el fisio
+await click('[data-tab="history"]');
+dl = page.waitForEvent('download'); await click('[data-action="report"]');
+const rep = fs.readFileSync(await (await dl).path(), 'utf8');
+if (SHOTS) fs.writeFileSync(`${SHOTS}/informe.html`, rep);
+ok(rep.includes('Informe') && rep.includes('Codo lateral') && rep.includes('<svg'), 'el informe trae zonas y gráfico de dolor');
+
 // 9. Calendario y copia
 await click('[data-tab="settings"]');
 await shot('14-ajustes');
-let dl = page.waitForEvent('download'); await click('[data-action="ics"]');
+dl = page.waitForEvent('download'); await click('[data-action="ics"]');
 const ics = fs.readFileSync(await (await dl).path(), 'utf8');
 ok(ics.includes('BEGIN:VCALENDAR') && ics.includes('FREQ=DAILY') && ics.includes('BYDAY=MO,TH'), 'el .ics trae isométricos diarios y entreno lunes y jueves');
 dl = page.waitForEvent('download'); await click('[data-action="export"]');

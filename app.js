@@ -1,7 +1,7 @@
 // Tendón Fuerte — rehabilitación de tendones y entreno con mancuernas. Los datos viven solo en el celular (IndexedDB).
 // Protocolo de tendones del video de Jeremy Ethier con Keith Baar y Coach Q; reglas en logic.js, bocetos en figures.js.
 
-const APP_VERSION = '1.4.0';
+const APP_VERSION = '1.5.0';
 const DAY_NAMES = { lu: 'Lu', ma: 'Ma', mi: 'Mi', ju: 'Ju', vi: 'Vi', sa: 'Sá', do: 'Do' };
 const SIDES = { der: 'derecha', izq: 'izquierda', ambos: 'ambos lados' };
 const REST_SECS = 90, ISO_REST = 60;
@@ -336,7 +336,12 @@ function startWorkout(tpl) {
   const items = [...planFor(tpl).filter((p) => !p.missing), ...maintenanceItems()].map((p) => ({
     ...p, rows: Array.from({ length: p.sets }, () => ({ w: p.w || 0, reps: '', rir: '', secs: p.secs || '', done: false })),
   }));
-  W = { tpl, items, started: Date.now() };
+  // Entrada en calor: movilidad, un isométrico por zona sensible (calma el dolor antes de cargar) y series de aproximación.
+  const first = items.find((p) => p.ex.kind === 'peso' && p.w > 0);
+  const warm = [{ txt: 'Movilidad 3–5 min: círculos de hombros, muñecas y cadera, sentadillas sin peso.' }];
+  if (S.painMode) for (const [zone, z] of Object.entries(S.zones)) if (z.phase < 3) warm.push({ txt: `Isométrico de ${zoneName(zone).toLowerCase()}: 1 × 30–45 s (${EXERCISES[REHAB[zone][1]].name.toLowerCase()}). Suele bajar el dolor para entrenar.` });
+  if (first) for (const x of warmupSets(first.w, first.steps)) warm.push({ txt: `${first.ex.name}: ${x.reps} reps con ${fmtKg(x.w)} (aproximación, no cuenta).` });
+  W = { tpl, items, started: Date.now(), warm: warm.map((x) => ({ ...x, done: false })) };
   renderWorkout(); $('wsheet').showModal(); calmMotion($('wsheet')); keepAwake(true);
 }
 function renderWorkout() {
@@ -359,7 +364,9 @@ function renderWorkout() {
       ${notes.join('')}<details class="cues"><summary>Cómo se hace</summary><ul>${it.ex.cues.map((c) => `<li>${esc(c)}</li>`).join('')}</ul></details>
       <div class="sets">${head}${rows}</div></div>`;
   }).join('');
-  dlg('wsheet').html = `<div class="dlg"><div class="dlg-head"><button class="link danger" data-action="cancel-workout">Salir</button><strong>Entreno ${W.tpl}</strong><button class="link" data-action="finish-workout">Terminar</button></div>${body}
+  const warm = W.warm?.length ? `<details class="card warm" ${W.warm.every((x) => x.done) ? '' : 'open'}><summary><h3>Entrada en calor</h3><span class="muted small">${W.warm.filter((x) => x.done).length}/${W.warm.length}</span></summary>
+    ${W.warm.map((x, i) => `<button class="warm-item${x.done ? ' on' : ''}" data-action="warm" data-i="${i}"><span class="box">${x.done ? '✓' : ''}</span><span>${esc(x.txt)}</span></button>`).join('')}</details>` : '';
+  dlg('wsheet').html = `<div class="dlg"><div class="dlg-head"><button class="link danger" data-action="cancel-workout">Salir</button><strong>Entreno ${W.tpl}</strong><button class="link" data-action="finish-workout">Terminar</button></div>${warm}${body}
     <button class="cta" data-action="finish-workout">Terminar entreno</button></div>`;
 }
 function setDone(i, j) {
@@ -678,7 +685,7 @@ function renderHistory() {
   if (!zones.includes(histZone)) histZone = zones[0] || '';
   const exIds = [...new Set(S.sessions.filter((s) => s.type === 'entreno').flatMap((s) => s.items.filter((i) => getEx(i.ex)?.kind === 'peso').map((i) => i.ex)))];
   if (!exIds.includes(histEx)) histEx = exIds[0] || '';
-  let h = `<h1>Historial</h1>`;
+  let h = `<div class="title-row"><h1>Historial</h1>${S.sessions.length ? '<button class="link" data-action="report">Informe para el fisio</button>' : ''}</div>`;
   h += `<h2>Dolor por zona</h2><div class="card pain">${zones.length ? `<select data-action="hist-zone" aria-label="Zona">${zones.map((z) => `<option value="${z}" ${z === histZone ? 'selected' : ''}>${esc(zoneName(z))}</option>`).join('')}</select>
     ${lineChart(painHistory(histZone), { yMax: 10, limit: PAIN_MAX, unit: '/10', color: 'var(--pain)' })}` : '<p class="muted small">Cuando registres dolor vas a ver su evolución acá.</p>'}</div>`;
   h += `<h2>Peso por ejercicio</h2><div class="card acc">${exIds.length ? `<select data-action="hist-ex" aria-label="Ejercicio">${exIds.map((e) => `<option value="${e}" ${e === histEx ? 'selected' : ''}>${esc(getEx(e)?.name || e)}</option>`).join('')}</select>
@@ -688,6 +695,35 @@ function renderHistory() {
       <button class="link danger small" data-action="del-session" data-id="${s.id}">Eliminar sesión</button></details>`).join('') : '<p class="muted small">Todavía no hay sesiones.</p>'}</div>`;
   $('view-history').innerHTML = h;
 }
+// Informe para el fisio: página HTML independiente (se puede imprimir como PDF) con las últimas 6 semanas.
+function reportHTML() {
+  const t = today(), from = addDays(t, -41), recent = S.sessions.filter((s) => s.date >= from);
+  const zones = [...new Set([...activeZones(), ...recent.flatMap((s) => Object.keys(s.pain || {}))])];
+  const avg = (xs) => (xs.length ? (xs.reduce((a, b) => a + b, 0) / xs.length).toFixed(1).replace('.', ',') : '—');
+  const zoneBlock = (zone) => {
+    const z = S.zones[zone], pts = painHistory(zone).filter((p) => p.x >= from);
+    const weeks = Array.from({ length: 6 }, (_, i) => { const a = addDays(t, -7 * (6 - i) + 1), b = addDays(a, 6); return { a, vals: pts.filter((p) => p.x >= a && p.x <= b).map((p) => p.y) }; });
+    const checks = S.checks.filter((c) => c.zone === zone && c.date >= from);
+    return `<section><h2>${esc(zoneName(zone))}${z ? ` · ${{ der: 'lado derecho', izq: 'lado izquierdo', ambos: 'ambos lados' }[z.side] || ''}` : ''}</h2>
+      ${z ? `<p><b>${esc(PHASES[z.phase].name)}</b> desde ${fmtDate(z.since)} · ejercicio: ${esc(EXERCISES[REHAB[zone][Math.min(2, z.phase)]].name)}${z.load ? ` con ${fmtKg(z.load)}` : ''}${z.phase === 1 ? ` · ${z.secs || ISO_SECS} s por serie` : ''}. Dolor inicial: ${z.pain0 ?? '—'}/10.</p>` : ''}
+      ${lineChart(pts, { yMax: 10, limit: PAIN_MAX, unit: '/10', color: '#E8590C' })}
+      <table><tr><th>Semana desde</th>${weeks.map((w) => `<td>${fmtDate(w.a)}</td>`).join('')}</tr><tr><th>Dolor promedio</th>${weeks.map((w) => `<td>${avg(w.vals)}</td>`).join('')}</tr><tr><th>Máximo</th>${weeks.map((w) => `<td>${w.vals.length ? Math.max(...w.vals) : '—'}</td>`).join('')}</tr></table>
+      <p class="muted">Al día siguiente: ${['mejor', 'igual', 'peor'].map((v) => `${v} ${checks.filter((c) => c.val === v).length}`).join(' · ')}.</p></section>`;
+  };
+  const train = recent.filter((s) => s.type === 'entreno'), rehab = recent.filter((s) => s.type === 'rehab');
+  const custom = S.custom.length ? `<h2>Ejercicios indicados por el fisio</h2><ul>${S.custom.map((c) => `<li>${esc(c.name)}: ${c.sets} × ${c.value} ${c.mode === 'segundos' ? 's' : 'reps'}${c.note ? ` — ${esc(c.note)}` : ''}</li>`).join('')}</ul>` : '';
+  return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Informe Tendón Fuerte</title>
+<style>:root{--pain:#E8590C;--acc:#5C940D;--line:#DEE2E6;--faint:#868E96;--card:#fff}body{font:15px/1.45 system-ui,sans-serif;color:#212529;max-width:760px;margin:24px auto;padding:0 16px}h1{margin:0}h2{margin:28px 0 6px;font-size:19px}.muted{color:#6C757D}table{border-collapse:collapse;width:100%;font-size:13px;margin-top:8px}th,td{border:1px solid var(--line);padding:5px;text-align:center}th{text-align:left;background:#F8F9FA}.chart svg{width:100%;max-width:520px;display:block}.chart .grid{stroke:var(--line)}.chart .axis{fill:var(--faint);font-size:11px}.chart .limit{stroke:var(--pain);stroke-dasharray:4 4;opacity:.7}.chart .series{fill:none;stroke-width:2}.chart .dot{stroke:#fff;stroke-width:2}.chart .hit{fill:transparent}.chart .empty{color:var(--faint);padding:12px 0}section{break-inside:avoid}@media print{button{display:none}}</style></head><body>
+<h1>Informe de rehabilitación</h1>
+<p class="muted">${esc(S.profile.name || 'Paciente')} · del ${fmtDate(from)} al ${fmtDate(t)} · generado con Tendón Fuerte ${APP_VERSION}</p>
+<p>Protocolo: isométricos (3 × 30–45 s, mañana y noche), luego isotónicos lentos 3 s/3 s y reintegración, con dolor tolerado hasta 3–4/10 y sin empeorar al día siguiente. Modo dolor ${S.painMode ? 'activo' : 'apagado'}.</p>
+<p><b>${rehab.length}</b> sesiones de rehabilitación y <b>${train.length}</b> entrenos en el período.</p>
+${zones.map(zoneBlock).join('') || '<p class="muted">Sin zonas con dolor registradas.</p>'}
+${custom}
+<button onclick="print()">Imprimir o guardar como PDF</button>
+</body></html>`;
+}
+
 // Gráfico de una serie: fechas en x, valor en y; tocá un punto para ver el valor.
 function lineChart(pts, { yMax, limit, unit, color }) {
   if (pts.length < 2) return `<div class="chart"><div class="empty">${pts.length ? `Un registro: ${pts[0].y}${unit === 'kg' ? ' kg' : unit}. Con dos ya se ve la línea.` : 'Sin registros todavía.'}</div></div>`;
@@ -858,6 +894,8 @@ document.addEventListener('click', (e) => {
     'cancel-rehab': () => { if (confirm('¿Salir sin guardar la sesión?')) { clearInterval(R?.timer); R = null; $('rsheet').close(); keepAwake(false); } },
     'pref': () => { S.prefs[d.k] = d.v === undefined ? !S.prefs[d.k] : Number(d.v); persist(); render(); if (d.k === 'sound' || d.k === 'voice') cue('go', 'Así suena'); },
     'news': openNews,
+    'warm': () => { W.warm[+d.i].done = !W.warm[+d.i].done; renderWorkout(); },
+    'report': () => shareFile(`informe-tendon-fuerte-${today()}.html`, reportHTML(), 'text/html'),
     'news-seen': () => { S.seenVersion = APP_VERSION; persist(); render(); },
     'pain-val': () => { P.vals[d.zone] = +d.n; renderPain(); },
     'save-pain': savePain,

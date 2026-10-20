@@ -95,6 +95,10 @@ eq(L('setsPerExercise(36, 2, 6)'), [3, 3, 3, 3, 3, 3], '36 series en 2 días = 3
 eq(L('setsPerExercise(36, 3, 6)'), [2, 2, 2, 2, 2, 2], 'mismas 36 en 3 días = 2 por ejercicio');
 eq(L('setsPerExercise(46, 3, 6)').reduce((a, b) => a + b) * 3, 45, '46 en 3 días ≈ 45 (compuestos primero)');
 
+// Entrada en calor
+eq(L(`warmupSets(10, ${steps})`), [{ w: 4, reps: 8 }, { w: 6, reps: 4 }], 'aproximación para 10 kg: 4 × 8 y 6 × 4');
+eq(L(`warmupSets(2, ${steps})`), [], 'con el peso mínimo no hay aproximación');
+
 // Semana, racha y resumen
 ctx.wk = { painMode: true, profile: { days: 2 }, zones: { codo_lat: { phase: 1 } }, sessions: [
   { date: '2026-10-19', type: 'entreno' }, { date: '2026-10-20', type: 'rehab' }, { date: '2026-10-20', type: 'rehab' },

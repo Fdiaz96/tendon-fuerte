@@ -147,6 +147,17 @@ function suggestThreeDays(state, today) {
   return Object.keys(state.zones).every((zone) => painLog(state, zone).filter((p) => daysBetween(p.date, today) <= 13).every((p) => p.val <= 3));
 }
 
+// ——— Entrada en calor ———
+// Series de aproximación antes del primer ejercicio con peso: 8 reps al 50 % y 4 al 75 % (sin repetir pesos).
+function warmupSets(w, steps) {
+  const out = [];
+  for (const [f, reps] of [[0.5, 8], [0.75, 4]]) {
+    const x = roundDown(steps, w * f);
+    if (x > 0 && x < w && !out.some((o) => o.w === x)) out.push({ w: x, reps });
+  }
+  return out;
+}
+
 // ——— Semana y racha ———
 // Entrenos y rehabilitaciones de la semana actual, con su objetivo.
 function weekStats(state, today) {
