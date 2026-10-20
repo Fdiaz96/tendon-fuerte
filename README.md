@@ -19,7 +19,7 @@ App web instalable (PWA) para recuperar tendones con isométricos y ganar múscu
   - Registra el dolor 0–10 y al día siguiente pregunta cómo amaneció: dolor ≤ 2 y no peor → sube la carga; > 4 o peor → baja.
   - En el entreno, los ejercicios que exigen una zona en fase 1–2 van al 60 %, o a una variante amable si la zona está sensible.
 - **Ejercicios del fisio:** se cargan a mano y aparecen en cada sesión de rehabilitación.
-- **Bocetos animados** propios en SVG para cada ejercicio.
+- **Ilustraciones animadas** propias en SVG para cada ejercicio (personaje con remera amarilla, movimiento fluido).
 - **Historial:** gráficos de dolor por zona y de peso por ejercicio.
 - **Recordatorios:** archivo `.ics` para el calendario del teléfono (isométricos diarios y días de entreno).
 
@@ -36,7 +36,7 @@ No es un consejo médico: ante dolor agudo, hinchazón o pérdida de fuerza, con
 |---|---|
 | `data.js` | Zonas, ejercicios con sus bocetos, plantillas A/B |
 | `logic.js` | Reglas puras: pesos, calibración, progresión, modo dolor, volumen, calendario |
-| `figures.js` | Dibujo y animación de los bocetos |
+| `figures.js` | Dibujo y animación de las ilustraciones |
 | `app.js` | Pantallas, sesiones y guardado |
 | `sw.js` | Caché para usarla sin conexión |
 

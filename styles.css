@@ -71,18 +71,12 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--acc); borde
 .switch.acc input:checked + i { background: var(--acc); border-color: var(--acc); }
 .switch input:checked + i::after { transform: translateX(20px); background: #fff; }
 
-/* Bocetos */
-.fig { width: 100%; height: auto; display: block; }
-.fig .bone { stroke: var(--text); stroke-width: 5; stroke-linecap: round; }
-.fig .far { opacity: .4; }
-.fig .head { fill: var(--text); }
-.fig .floor, .fig .scene { stroke: #4A4F57; stroke-width: 3; fill: none; stroke-linecap: round; }
-.fig .prop, .fig .strap { stroke: var(--acc); stroke-width: 3; fill: none; }
-.fig .prop-fill { fill: var(--acc); }
-.fig .strap { stroke-width: 1.5; }
-.pain .fig .prop, .pain .fig .strap { stroke: var(--pain); } .pain .fig .prop-fill { fill: var(--pain); }
-.thumb { width: 72px; flex: none; background: var(--card2); border-radius: 12px; padding: 4px; }
-.hero-fig { background: var(--card2); border-radius: var(--r); padding: 8px; max-width: 320px; margin: 0 auto; }
+/* Ilustraciones (fondo claro, como una lámina) */
+.fig { width: 100%; height: auto; display: block; background: #F4F5F7; border-radius: 12px; }
+.thumb { width: 76px; flex: none; }
+.thumb .fig { border-radius: 10px; }
+.hero-fig { max-width: 340px; margin: 0 auto; }
+.hero-fig .fig { border-radius: var(--r); }
 
 /* Lista de ejercicios */
 .ex { display: flex; gap: 12px; align-items: center; }

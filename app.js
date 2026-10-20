@@ -1,7 +1,7 @@
 // Tendón Fuerte — rehabilitación de tendones y entreno con mancuernas. Los datos viven solo en el celular (IndexedDB).
 // Protocolo de tendones del video de Jeremy Ethier con Keith Baar y Coach Q; reglas en logic.js, bocetos en figures.js.
 
-const APP_VERSION = '1.0.0';
+const APP_VERSION = '1.1.0';
 const DAY_NAMES = { lu: 'Lu', ma: 'Ma', mi: 'Mi', ju: 'Ju', vi: 'Vi', sa: 'Sá', do: 'Do' };
 const SIDES = { der: 'derecha', izq: 'izquierda', ambos: 'ambos lados' };
 const REST_SECS = 90, ISO_REST = 60;
@@ -168,7 +168,7 @@ function renderTrain() {
     const plan = planFor(tpl);
     h += `<h2>Día ${tpl}${S.plan.next === tpl ? ' · toca hoy' : ''}</h2><div class="card">`;
     h += plan.map((p) => `<div class="ex" data-action="ex-detail" data-ex="${p.ex.id}" style="padding:6px 0">
-        <div class="thumb">${figureSVG(p.ex, { animate: false })}</div>
+        <div class="thumb">${figureSVG(p.ex, { animate: false, crop: true })}</div>
         <div class="info"><h3>${esc(p.ex.name)}</h3><p class="muted small">${p.missing ? 'Falta equipo' : `${p.sets} × ${setLabel(p)}`}${p.r ? ` · <span style="color:var(--pain)">${p.r.mode === 'alt' ? 'variante amable' : 'al 60 %'}</span>` : ''}</p></div>
         <div class="w">${p.ex.kind === 'peso' ? `<span class="num">${p.w || '—'}</span><div class="small muted">${p.calib ? 'calibrar' : 'kg'}</div>` : ''}</div></div>`).join('');
     h += `<button class="cta" style="margin-top:10px" data-action="start-workout" data-tpl="${tpl}">Empezar día ${tpl}</button></div>`;
@@ -217,7 +217,7 @@ function renderWorkout() {
       <input type="number" inputmode="numeric" min="0" value="${timed ? r.secs : r.reps}" placeholder="${timed ? it.secs : '10'}" data-w="${i}.${j}.${timed ? 'secs' : 'reps'}" aria-label="${timed ? 'Segundos' : 'Repeticiones'}">
       ${k === 'peso' ? `<select data-w="${i}.${j}.rir" aria-label="Repeticiones en reserva"><option value="">–</option>${[0, 1, 2, 3, 4].map((n) => `<option ${String(r.rir) === String(n) ? 'selected' : ''}>${n}</option>`).join('')}</select>` : '<span></span>'}
       <button class="ok" data-action="set-done" data-i="${i}" data-j="${j}" aria-label="Serie hecha">✓</button></div>`).join('');
-    return `<div class="card${it.r || it.maint ? ' pain' : ''}"><div class="ex"><div class="thumb">${figureSVG(it.ex)}</div>
+    return `<div class="card${it.r || it.maint ? ' pain' : ''}"><div class="ex"><div class="thumb">${figureSVG(it.ex, { crop: true })}</div>
       <div class="info"><h3>${esc(it.ex.name)}</h3><p class="muted small">${it.sets} × ${setLabel(it)}${weighted ? ` · ${fmtKg(it.w)}` : ''}</p></div></div>
       ${notes.join('')}<details class="cues"><summary>Cómo se hace</summary><ul>${it.ex.cues.map((c) => `<li>${esc(c)}</li>`).join('')}</ul></details>
       <div class="sets">${head}${rows}</div></div>`;
@@ -419,7 +419,7 @@ function renderTendons() {
       const ex = EXERCISES[REHAB[zd.id][Math.min(2, z.phase)]];
       h += `<div class="chips" style="margin-top:10px">${Object.entries(SIDES).map(([k, v]) => `<button class="chip${z.side === k ? ' on' : ''}" data-action="zone-side" data-zone="${zd.id}" data-side="${k}">${v}</button>`).join('')}</div>
         <p class="small" style="margin-top:10px"><b>${esc(PHASES[z.phase].name)}</b> · desde ${fmtDate(z.since)}<br><span class="muted">${esc(PHASES[z.phase].what)}</span></p>
-        ${z.phase < 3 ? `<div class="ex" data-action="ex-detail" data-ex="${ex.id}"><div class="thumb">${figureSVG(ex, { animate: false })}</div><div class="info"><h3>${esc(ex.name)}</h3><p class="muted small">${z.load ? fmtKg(z.load) + ' · ' : ''}${z.phase === 1 ? `${ISO_SETS} × ${z.secs || ISO_SECS} s` : `${LENTO_SETS} × ${LENTO_REPS}`}</p></div></div>` : ''}
+        ${z.phase < 3 ? `<div class="ex" data-action="ex-detail" data-ex="${ex.id}"><div class="thumb">${figureSVG(ex, { animate: false, crop: true })}</div><div class="info"><h3>${esc(ex.name)}</h3><p class="muted small">${z.load ? fmtKg(z.load) + ' · ' : ''}${z.phase === 1 ? `${ISO_SETS} × ${z.secs || ISO_SECS} s` : `${LENTO_SETS} × ${LENTO_REPS}`}</p></div></div>` : ''}
         <div class="btns" style="margin-top:8px">${z.phase > 1 ? `<button class="sec" data-action="phase" data-zone="${zd.id}" data-dir="-1">← Fase ${z.phase - 1}</button>` : ''}${z.phase < 3 ? `<button class="sec" data-action="phase" data-zone="${zd.id}" data-dir="1">Fase ${z.phase + 1} →</button>` : ''}</div>
         <p class="faint small">${z.phase < 3 ? (phaseReady(S, zd.id, today()) ? '✓ Lista para avanzar.' : 'Para avanzar: 10 días en la fase y una semana con dolor ≤ 3 sin empeorar.') : ''}</p>`;
     }
@@ -524,7 +524,7 @@ function renderSettings() {
     <p class="faint small" id="persist-status"></p></div>
   <h2>Fuentes</h2><div class="card small">
     <p class="muted">Protocolo de tendones basado en:</p><ul>${SOURCES.map((s) => `<li><a href="${s.url}" target="_blank" rel="noopener">${esc(s.title)}</a></li>`).join('')}</ul>
-    <p class="muted">Bocetos dibujados para esta app. Tendón Fuerte no es un consejo médico: consultá a un profesional ante dolor agudo, hinchazón o pérdida de fuerza.</p>
+    <p class="muted">Ilustraciones generadas por código para esta app (sin imágenes de terceros). Tendón Fuerte no es un consejo médico: consultá a un profesional ante dolor agudo, hinchazón o pérdida de fuerza.</p>
     <p class="faint">Versión ${APP_VERSION}</p></div>
   <button class="link danger" data-action="reset">Borrar todos los datos</button>`;
   $('view-settings').innerHTML = h;
