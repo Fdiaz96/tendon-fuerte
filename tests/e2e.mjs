@@ -97,6 +97,11 @@ await click('#painsheet [data-zone="muneca"][data-n="2"]');
 await click('[data-action="save-pain"]');
 s = await state();
 ok(s.sessions[0].type === 'entreno' && s.sessions[0].pain.codo_lat === 3, 'guarda el entreno con el dolor');
+await page.waitForSelector('#sumsheet[open]');
+ok((await page.locator('#sumsheet').textContent()).includes('series') && s.sessions[0].sets === 2, 'muestra el resumen del entreno (2 series)');
+await shot('18-resumen');
+await click('#sumsheet [data-action="close"]');
+ok((await page.locator('#view-home .week .dots i.on').count()) === 1, 'Inicio muestra 1 entreno hecho esta semana');
 ok(s.lifts.goblet && s.lifts.goblet.w === 12, 'el goblet queda calibrado');
 ok(s.plan.next === 'B', 'el próximo entreno es el B');
 

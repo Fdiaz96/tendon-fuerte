@@ -147,6 +147,30 @@ function suggestThreeDays(state, today) {
   return Object.keys(state.zones).every((zone) => painLog(state, zone).filter((p) => daysBetween(p.date, today) <= 13).every((p) => p.val <= 3));
 }
 
+// ——— Semana y racha ———
+// Entrenos y rehabilitaciones de la semana actual, con su objetivo.
+function weekStats(state, today) {
+  const wk = weekKey(today), mine = state.sessions.filter((s) => weekKey(s.date) === wk);
+  const phases = state.painMode ? Object.values(state.zones).map((z) => z.phase) : [];
+  const rehabTarget = phases.includes(1) ? 14 : phases.includes(2) ? 4 : 0;   // fase 1: mañana y noche; fase 2: día por medio
+  return { train: mine.filter((s) => s.type === 'entreno').length, target: state.profile.days, rehab: mine.filter((s) => s.type === 'rehab').length, rehabTarget };
+}
+// Semanas seguidas cumpliendo los días de entreno (la actual cuenta si ya se cumplió).
+function streak(state, today) {
+  const per = {};
+  for (const s of state.sessions) if (s.type === 'entreno') per[weekKey(s.date)] = (per[weekKey(s.date)] || 0) + 1;
+  let wk = weekKey(today), n = 0;
+  if ((per[wk] || 0) >= state.profile.days) n++;
+  for (wk = addDays(wk, -7); (per[wk] || 0) >= state.profile.days; wk = addDays(wk, -7)) n++;
+  return n;
+}
+// Resumen de un entreno: series, volumen (kg × reps) y duración en minutos.
+function sessionSummary(session, ms) {
+  const sets = session.items.reduce((n, i) => n + i.sets.length, 0);
+  const vol = session.items.reduce((v, i) => v + i.sets.reduce((a, x) => a + (x.w || 0) * (x.reps || 0), 0), 0);
+  return { sets, vol: Math.round(vol), min: Math.max(1, Math.round(ms / 60000)) };
+}
+
 // ——— Calendario (.ics) ———
 const DAYS_ICS = { lu: 'MO', ma: 'TU', mi: 'WE', ju: 'TH', vi: 'FR', sa: 'SA', do: 'SU' };
 function icsText(rem, painMode, today) {

@@ -2,6 +2,15 @@
 
 Todos los cambios de Tendón Fuerte, del más nuevo al más viejo.
 
+## 1.4.0 — Progreso y motivación
+
+- **Resumen al terminar el entreno**: minutos, series y volumen (kg × reps) en números grandes.
+- **Récords**: si superás tu 1RM estimado en un ejercicio con peso, o tu máximo de repeticiones en uno sin peso, aparece 🏆 en el resumen y en el historial.
+- **"La próxima vez"**: el resumen muestra qué ejercicios suben (o bajan) de peso para la sesión siguiente, según la doble progresión.
+- **Tarjeta semanal en Inicio**: puntos con los entrenos de la semana contra tu objetivo, sesiones de rehabilitación hechas (14 por semana en fase 1, 4 en fase 2) y racha.
+- **Racha** 🔥: semanas seguidas cumpliendo tus días de entreno.
+- El historial muestra duración y series de cada entreno.
+
 ## 1.3.0 — Sesiones más cómodas
 
 - **Pantalla siempre prendida** mientras hacés un entreno o una rehabilitación (se apaga sola al terminar).

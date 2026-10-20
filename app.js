@@ -1,7 +1,7 @@
 // Tendón Fuerte — rehabilitación de tendones y entreno con mancuernas. Los datos viven solo en el celular (IndexedDB).
 // Protocolo de tendones del video de Jeremy Ethier con Keith Baar y Coach Q; reglas en logic.js, bocetos en figures.js.
 
-const APP_VERSION = '1.3.0';
+const APP_VERSION = '1.4.0';
 const DAY_NAMES = { lu: 'Lu', ma: 'Ma', mi: 'Mi', ju: 'Ju', vi: 'Vi', sa: 'Sá', do: 'Do' };
 const SIDES = { der: 'derecha', izq: 'izquierda', ambos: 'ambos lados' };
 const REST_SECS = 90, ISO_REST = 60;
@@ -146,6 +146,11 @@ function renderHome() {
   const t = today(), checks = pendingChecks(S, t);
   const hasZones = activeZones().length > 0;
   let h = `<p class="greet">${S.profile.name ? `Hola, ${esc(S.profile.name)}` : 'Hola'} · ${fmtDate(t)}</p><h1>Hoy</h1>`;
+  const ws = weekStats(S, t), st = streak(S, t);
+  const dots = (n, of) => Array.from({ length: Math.max(of, n) }, (_, i) => `<i class="${i < n ? 'on' : ''}"></i>`).join('');
+  h += `<div class="week card"><div><span class="muted small">Entrenos esta semana</span><div class="dots">${dots(ws.train, ws.target)}</div></div>
+    ${ws.rehabTarget ? `<div><span class="muted small">Rehab</span><div class="num rehab-n">${ws.rehab}/${ws.rehabTarget}</div></div>` : ''}
+    ${st ? `<div><span class="muted small">Racha</span><div class="num">🔥 ${st}</div></div>` : ''}</div>`;
   for (const zone of checks) {
     h += `<div class="card pain"><h3>¿Cómo amaneció tu ${esc(zoneName(zone).toLowerCase())}?</h3><p class="muted small">Comparado con ayer. Si está peor, bajamos la carga.</p>
       <div class="btns">${['mejor', 'igual', 'peor'].map((v) => `<button class="sec" data-action="check" data-zone="${zone}" data-val="${v}">${v[0].toUpperCase() + v.slice(1)}</button>`).join('')}</div></div>`;
@@ -381,19 +386,28 @@ function finishWorkout() {
   const items = W.items.map((it) => ({ ex: it.ex.id, name: it.ex.name, maint: it.maint || undefined, capped: !!it.r, sets: it.rows.filter((r) => r.done).map((r) => ({ w: Number(r.w) || 0, reps: Number(r.reps) || 0, rir: r.rir === '' ? null : Number(r.rir), secs: Number(r.secs) || 0 })) }))
     .filter((x) => x.sets.length);
   if (!items.length) return toast('Marcá al menos una serie como hecha.');
+  const prs = [], ups = [];
   for (const it of W.items) {
     const sets = it.rows.filter((r) => r.done);
     if (!sets.length) continue;
     if (it.ex.kind === 'peso' && S.lifts[it.ex.id]) {
-      const lift = S.lifts[it.ex.id];
+      const lift = S.lifts[it.ex.id], prev = it.calibrated ? 0 : lift.e1rm || 0, w0 = lift.w;
       const best = Math.max(...sets.map((s) => epley1RM(Number(s.w), Number(s.reps) + (Number(s.rir) || 0))));
+      if (prev && best > prev + 0.05) prs.push({ name: it.ex.name, val: `${Math.round(best * 10) / 10} kg (1RM estimado)` });
       lift.e1rm = Math.round(Math.max(lift.e1rm || 0, best) * 10) / 10;
       // Con tope por dolor o recién calibrado no se progresa: el peso de trabajo ya quedó definido.
       if (!it.r && !it.calibrated) lift.w = progress(lift.w, sets.map((s) => ({ reps: Number(s.reps) })), it.steps);
+      if (lift.w !== w0) ups.push({ name: it.ex.name, from: w0, to: lift.w });
+    }
+    if (it.ex.kind === 'reps') {
+      const l = (S.lifts[it.ex.id] ||= { bestReps: 0 }), top = Math.max(...sets.map((s) => Number(s.reps) || 0));
+      if (l.bestReps && top > l.bestReps) prs.push({ name: it.ex.name, val: `${top} repeticiones` });
+      l.bestReps = Math.max(l.bestReps || 0, top);
     }
     if (it.ex.kind === 'tiempo') { const l = (S.lifts[it.ex.id] ||= { secs: 30 }); if (sets.every((s) => Number(s.secs) >= l.secs)) l.secs = Math.min(90, l.secs + 5); }
   }
   const session = { id: uid(), date: today(), type: 'entreno', tpl: W.tpl, items };
+  Object.assign(session, sessionSummary(session, Date.now() - W.started), { prs, ups });
   const zones = [...new Set(W.items.flatMap((it) => (it.r ? it.r.zones : it.maint ? [it.maint] : [])))];
   S.plan.next = W.tpl === 'A' ? 'B' : 'A';
   stopRest(); W = null; $('wsheet').close(); keepAwake(false);
@@ -402,7 +416,19 @@ function finishWorkout() {
 }
 function saveSession(session) {
   S.sessions.unshift(session); persist(); render();
-  toast(session.type === 'entreno' ? '¡Entreno guardado! 💪' : 'Rehabilitación guardada.');
+  if (session.type === 'entreno') return showSummary(session);
+  toast('Rehabilitación guardada.');
+}
+// Pantalla de cierre del entreno: números grandes, récords y lo que sube la próxima vez.
+function showSummary(s) {
+  const st = streak(S, today());
+  dlg('sumsheet').html = `<div class="dlg"><div class="dlg-head"><strong>¡Entreno ${s.tpl} hecho! 💪</strong><button class="link" data-action="close" data-dlg="sumsheet">Listo</button></div>
+    <div class="stats"><div><span class="big num">${s.min}</span><span class="muted small">minutos</span></div><div><span class="big num">${s.sets}</span><span class="muted small">series</span></div><div><span class="big num">${s.vol >= 1000 ? (s.vol / 1000).toFixed(1).replace('.', ',') + 'k' : s.vol}</span><span class="muted small">kg × reps</span></div></div>
+    ${st ? `<p class="streak">🔥 ${st} ${st === 1 ? 'semana cumplida' : 'semanas seguidas cumpliendo'}</p>` : ''}
+    ${s.prs?.length ? `<h2>Récords</h2>${s.prs.map((p) => `<div class="row"><span>🏆 ${esc(p.name)}</span><b class="num">${esc(p.val)}</b></div>`).join('')}` : ''}
+    ${s.ups?.length ? `<h2>La próxima vez</h2>${s.ups.map((u) => `<div class="row"><span>${esc(u.name)}</span><b class="num" style="color:${u.to > u.from ? 'var(--acc)' : 'var(--pain)'}">${fmtKg(u.from)} → ${fmtKg(u.to)}</b></div>`).join('')}` : '<p class="muted small">Mismo peso la próxima: cuando hagas 12 reps en todas las series, sube.</p>'}
+    <p class="muted small" style="margin-top:14px">Próximo: entreno ${S.plan.next}.</p></div>`;
+  $('sumsheet').showModal();
 }
 
 // Descanso entre series
@@ -657,7 +683,7 @@ function renderHistory() {
     ${lineChart(painHistory(histZone), { yMax: 10, limit: PAIN_MAX, unit: '/10', color: 'var(--pain)' })}` : '<p class="muted small">Cuando registres dolor vas a ver su evolución acá.</p>'}</div>`;
   h += `<h2>Peso por ejercicio</h2><div class="card acc">${exIds.length ? `<select data-action="hist-ex" aria-label="Ejercicio">${exIds.map((e) => `<option value="${e}" ${e === histEx ? 'selected' : ''}>${esc(getEx(e)?.name || e)}</option>`).join('')}</select>
     ${lineChart(weightHistory(histEx), { unit: 'kg', color: 'var(--acc)' })}` : '<p class="muted small">Después de tus primeros entrenos vas a ver el progreso acá.</p>'}</div>`;
-  h += `<h2>Sesiones</h2><div class="card">${S.sessions.length ? S.sessions.slice(0, 60).map((s) => `<details class="sess-d"><summary class="sess"><span><span class="what">${s.type === 'entreno' ? `Entreno ${s.tpl}` : `Rehab · ${s.slot}`}</span><br><span class="muted small">${fmtDate(s.date)}${s.pain ? ' · dolor ' + Object.entries(s.pain).map(([z, v]) => `${zoneName(z).toLowerCase()} ${v}`).join(', ') : ''}</span></span><span class="tag ${s.type === 'entreno' ? 'acc' : 'pain'}">${s.items.length} ej.</span></summary>
+  h += `<h2>Sesiones</h2><div class="card">${S.sessions.length ? S.sessions.slice(0, 60).map((s) => `<details class="sess-d"><summary class="sess"><span><span class="what">${s.type === 'entreno' ? `Entreno ${s.tpl}` : `Rehab · ${s.slot}`}</span><br><span class="muted small">${fmtDate(s.date)}${s.min ? ` · ${s.min} min · ${s.sets} series` : ''}${s.prs?.length ? ' · 🏆' : ''}${s.pain ? ' · dolor ' + Object.entries(s.pain).map(([z, v]) => `${zoneName(z).toLowerCase()} ${v}`).join(', ') : ''}</span></span><span class="tag ${s.type === 'entreno' ? 'acc' : 'pain'}">${s.items.length} ej.</span></summary>
       <ul class="small muted">${s.items.map((i) => `<li>${esc(getEx(i.ex)?.name || i.name || i.ex)}: ${i.sets.map((x) => (x.w ? `${x.w}×` : '') + (x.reps || (x.secs ? x.secs + 's' : '✓'))).join(', ')}</li>`).join('')}</ul>
       <button class="link danger small" data-action="del-session" data-id="${s.id}">Eliminar sesión</button></details>`).join('') : '<p class="muted small">Todavía no hay sesiones.</p>'}</div>`;
   $('view-history').innerHTML = h;

@@ -95,6 +95,16 @@ eq(L('setsPerExercise(36, 2, 6)'), [3, 3, 3, 3, 3, 3], '36 series en 2 días = 3
 eq(L('setsPerExercise(36, 3, 6)'), [2, 2, 2, 2, 2, 2], 'mismas 36 en 3 días = 2 por ejercicio');
 eq(L('setsPerExercise(46, 3, 6)').reduce((a, b) => a + b) * 3, 45, '46 en 3 días ≈ 45 (compuestos primero)');
 
+// Semana, racha y resumen
+ctx.wk = { painMode: true, profile: { days: 2 }, zones: { codo_lat: { phase: 1 } }, sessions: [
+  { date: '2026-10-19', type: 'entreno' }, { date: '2026-10-20', type: 'rehab' }, { date: '2026-10-20', type: 'rehab' },
+  { date: '2026-10-13', type: 'entreno' }, { date: '2026-10-15', type: 'entreno' }, { date: '2026-10-07', type: 'entreno' }, { date: '2026-10-09', type: 'entreno' }] };
+eq(L(`weekStats(wk, '${T}')`), { train: 1, target: 2, rehab: 2, rehabTarget: 14 }, 'semana: 1 de 2 entrenos, 2 de 14 rehabs (fase 1)');
+eq(L(`streak(wk, '${T}')`), 2, 'racha: las 2 semanas anteriores cumplidas (la actual todavía no)');
+L(`wk.sessions.push({ date: '2026-10-21', type: 'entreno' })`);
+eq(L(`streak(wk, '${T}')`), 3, 'al cumplir la semana actual, la racha suma');
+eq(L(`sessionSummary({ items: [{ sets: [{ w: 10, reps: 10 }, { w: 10, reps: 8 }] }, { sets: [{ secs: 30 }] }] }, 25 * 60000)`), { sets: 3, vol: 180, min: 25 }, 'resumen: series, volumen y minutos');
+
 // Calendario
 const ics = L(`icsText({ am: '08:00', pm: '20:00', train: ['lu', 'ju'], trainAt: '19:00' }, true, '${T}')`);
 ok(ics.includes('RRULE:FREQ=DAILY') && ics.includes('DTSTART:20261020T080000'), 'ics con isométricos diarios a las 8');
