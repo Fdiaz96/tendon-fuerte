@@ -211,6 +211,15 @@ const rep = fs.readFileSync(await (await dl).path(), 'utf8');
 if (SHOTS) fs.writeFileSync(`${SHOTS}/informe.html`, rep);
 ok(rep.includes('Informe') && rep.includes('Codo lateral') && rep.includes('<svg'), 'el informe trae zonas y gráfico de dolor');
 
+// 8e. Eliminar sesión y deshacer
+await click('[data-tab="history"]');
+const before = (await state()).sessions.length;
+await page.locator('#view-history details.sess-d').first().evaluate((d) => (d.open = true));
+await click('#view-history [data-action="del-session"]');
+ok((await state()).sessions.length === before - 1, 'elimina una sesión sin preguntar');
+await click('#toast [data-action="undo"]');
+ok((await state()).sessions.length === before, 'Deshacer la recupera');
+
 // 9. Calendario y copia
 await click('[data-tab="settings"]');
 await shot('14-ajustes');
@@ -234,6 +243,22 @@ await ctx.setOffline(true);
 await page.reload(); await page.waitForTimeout(300);
 ok(await page.locator('#view-home h1').count() === 1, 'abre sin conexión');
 await ctx.setOffline(false);
+
+// 11. Migración: datos guardados por la versión 1.0 (sin rutina, preferencias ni equipo extra)
+await page.evaluate(() => new Promise((res) => {
+  const old = { v: 1, onboarded: true, painMode: true, profile: { name: 'Viejo', sex: 'h', weight: '75', height: '', age: '40', exp: 'novato', days: 2 },
+    equip: { db: { min: 2, max: 24, step: 2 }, kb: [12], rings: false }, zones: { codo_lat: { side: 'der', pain0: 5, phase: 1, since: '2026-10-01', load: 2, secs: 45 } },
+    lifts: { goblet: { w: 12, e1rm: 18 } }, sessions: [{ id: 'x', date: '2026-10-10', type: 'entreno', tpl: 'A', items: [{ ex: 'goblet', sets: [{ w: 12, reps: 10 }] }] }], checks: [], custom: [],
+    plan: { budget: 36, week: '2026-10-05', next: 'B' }, rem: { am: '08:00', pm: '20:00', train: ['lu'], trainAt: '19:00' } };
+  const r = indexedDB.open('tendon-fuerte', 1);
+  r.onsuccess = () => { const t = r.result.transaction('kv', 'readwrite'); t.objectStore('kv').put(old, 'data'); t.oncomplete = () => { r.result.close(); res(); }; };
+}));
+await page.reload(); await page.waitForTimeout(400);
+s = await state();
+ok(s.profile.name === 'Viejo' && s.templates.A.length === 6 && s.prefs.rest === 90 && Array.isArray(s.equip.machines), 'migra datos de la v1.0 con los valores nuevos por defecto');
+ok(await page.locator('#view-home .card').count() > 0 && await page.locator('#view-home >> text=Novedades de la versión').count() === 1, 'quien venía de antes ve la tarjeta de novedades');
+await click('[data-tab="train"]');
+ok(await page.locator('#view-train .ex').count() >= 12, 'la rutina se arma con los datos viejos');
 
 ok(errors.length === 0, `sin errores de JavaScript${errors.length ? ': ' + errors.join(' | ') : ''}`);
 await browser.close();

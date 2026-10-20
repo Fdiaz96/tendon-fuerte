@@ -2,6 +2,12 @@
 
 Todos los cambios de Tendón Fuerte, del más nuevo al más viejo.
 
+## 1.7.1 — Pulido
+
+- **Deshacer**: al eliminar una sesión del historial aparece "Deshacer" durante 6 segundos (ya no pregunta antes).
+- Durante el entreno, **tocá la ilustración** de un ejercicio para verla en grande, con las indicaciones y tu progreso.
+- Prueba automática de **migración**: los datos guardados con la versión 1.0 se abren bien en la nueva (rutina, preferencias y equipo nuevos toman valores por defecto).
+
 ## 1.7.0 — Biblioteca ampliada
 
 - **13 ejercicios nuevos con ilustración animada**, pensados para ganar músculo en casa con mancuernas, pesa rusa y peso corporal. Aparecen en Entreno → *Editar rutina* → cambiar/agregar:

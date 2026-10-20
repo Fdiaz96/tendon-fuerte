@@ -195,6 +195,8 @@ dialog.full .dlg-head { background: var(--bg); }
 #rest strong { font-family: 'Oswald'; font-size: 28px; flex: 1; text-align: center; }
 #rest button { background: rgba(0, 0, 0, .15); padding: 8px 12px; border-radius: 10px; font-weight: 700; }
 dialog #rest { bottom: calc(16px + var(--safe-b)); }
+#toast button { float: right; margin: -4px -4px 0 10px; color: var(--acc); font-weight: 700; padding: 4px 6px; }
+.thumb[data-action] { cursor: zoom-in; }
 #toast { position: fixed; z-index: 40; left: 16px; right: 16px; top: calc(12px + var(--safe-t)); max-width: 608px; margin: 0 auto; background: var(--card2); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; box-shadow: 0 8px 24px rgba(0, 0, 0, .4); }
 
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }

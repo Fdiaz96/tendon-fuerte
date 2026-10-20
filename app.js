@@ -1,7 +1,7 @@
 // Tendón Fuerte — rehabilitación de tendones y entreno con mancuernas. Los datos viven solo en el celular (IndexedDB).
 // Protocolo de tendones del video de Jeremy Ethier con Keith Baar y Coach Q; reglas en logic.js, bocetos en figures.js.
 
-const APP_VERSION = '1.7.0';
+const APP_VERSION = '1.7.1';
 const DAY_NAMES = { lu: 'Lu', ma: 'Ma', mi: 'Mi', ju: 'Ju', vi: 'Vi', sa: 'Sá', do: 'Do' };
 const SIDES = { der: 'derecha', izq: 'izquierda', ambos: 'ambos lados' };
 const REST_SECS = 90, ISO_REST = 60;
@@ -50,10 +50,14 @@ const dlg = (id) => ({
 });
 let toastTimer;
 function overlayHost() { return [...document.querySelectorAll('dialog[open]')].pop() || document.body; }
-function toast(msg) {
+// undo: función opcional que muestra el botón "Deshacer" (el aviso dura más).
+let toastUndo = null;
+function toast(msg, undo) {
   const t = $('toast'); overlayHost().appendChild(t);
   t.querySelector('span').textContent = msg; t.hidden = false;
-  clearTimeout(toastTimer); toastTimer = setTimeout(() => (t.hidden = true), 3500);
+  t.querySelector('button')?.remove(); toastUndo = undo || null;
+  if (undo) t.insertAdjacentHTML('beforeend', '<button type="button" data-action="undo">Deshacer</button>');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.hidden = true; toastUndo = null; }, undo ? 6000 : 3500);
 }
 
 // ——— Navegación ———
@@ -360,7 +364,7 @@ function renderWorkout() {
       <input type="number" inputmode="numeric" min="0" value="${timed ? r.secs : r.reps}" placeholder="${timed ? it.secs : '10'}" data-w="${i}.${j}.${timed ? 'secs' : 'reps'}" aria-label="${timed ? 'Segundos' : 'Repeticiones'}">
       ${k === 'peso' ? `<select data-w="${i}.${j}.rir" aria-label="Repeticiones en reserva"><option value="">–</option>${[0, 1, 2, 3, 4].map((n) => `<option ${String(r.rir) === String(n) ? 'selected' : ''}>${n}</option>`).join('')}</select>` : '<span></span>'}
       <button class="ok" data-action="set-done" data-i="${i}" data-j="${j}" aria-label="Serie hecha">✓</button></div>`).join('');
-    return `<div class="card${it.r || it.maint ? ' pain' : ''}"><div class="ex"><div class="thumb">${figureSVG(it.ex, { crop: true })}</div>
+    return `<div class="card${it.r || it.maint ? ' pain' : ''}"><div class="ex"><div class="thumb" data-action="ex-detail" data-ex="${it.ex.id}" title="Ver en grande">${figureSVG(it.ex, { crop: true })}</div>
       <div class="info"><h3>${esc(it.ex.name)}</h3><p class="muted small">${it.sets} × ${setLabel(it)}${weighted ? ` · ${fmtKg(it.w)}` : ''}</p>${it.impl === 'db' && platesFor(S.equip, it.w) ? `<p class="plates">Por lado: ${platesLabel(it.w)}</p>` : ''}</div></div>
       ${notes.join('')}<details class="cues"><summary>Cómo se hace</summary><ul>${it.ex.cues.map((c) => `<li>${esc(c)}</li>`).join('')}</ul></details>
       <div class="sets">${head}${rows}</div></div>`;
@@ -956,7 +960,12 @@ document.addEventListener('click', (e) => {
       persist(); $('customsheet').close(); render();
     },
     'custom-del': () => { if (confirm('¿Eliminar este ejercicio?')) { S.custom = S.custom.filter((x) => x.id !== d.id); persist(); $('customsheet').close(); render(); } },
-    'del-session': () => { if (confirm('¿Eliminar esta sesión?')) { S.sessions = S.sessions.filter((s) => s.id !== d.id); persist(); render(); } },
+    'del-session': () => {
+      const i = S.sessions.findIndex((s) => s.id === d.id); if (i < 0) return;
+      const [gone] = S.sessions.splice(i, 1); persist(); render();
+      toast('Sesión eliminada.', () => { S.sessions.splice(i, 0, gone); persist(); render(); toast('Sesión recuperada.'); });
+    },
+    'undo': () => { const f = toastUndo; toastUndo = null; $('toast').hidden = true; f?.(); },
     'set-sex': () => { S.profile.sex = d.v; persist(); $('onb').open ? renderOnb() : render(); },
     'set-exp': () => { S.profile.exp = d.v; persist(); $('onb').open ? renderOnb() : render(); },
     'rem-day': () => { const t = S.rem.train; S.rem.train = t.includes(d.v) ? t.filter((x) => x !== d.v) : Object.keys(DAY_NAMES).filter((k) => t.includes(k) || k === d.v); persist(); render(); },
