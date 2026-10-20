@@ -161,6 +161,16 @@ issues = lenVar.filter(([, okk]) => !okk).map(([id]) => id);
 ok(!issues.length, `brazos y piernas no se acortan a mitad del movimiento (interpolación por ángulos) ${issues.join(', ')}`);
 ok(L(`figureSVG(EXERCISES.curl_martillo).includes('keyTimes="0;0.083')`), 'la animación usa fotogramas intermedios');
 ok(L(`muscleStats(EXERCISES.rdl).yaw < 0 && muscleStats(EXERCISES.lateral).yaw === 65 && muscleStats(EXERCISES.curl_martillo).yaw === 40`), 'la cámara gira para mostrar isquios y glúteos (peso muerto), es más frontal en los dibujados de frente y queda en 40° en el resto');
+// Articulaciones: en ningún fotograma un codo o una rodilla se dobla para el lado imposible (más de 12°).
+const disl = L(`Object.values(EXERCISES).filter((e) => !e.fig.front).flatMap((e) => framesOf(e.fig).FR.flatMap((J) => ['1', '2'].flatMap((n) => [['S', 'E', 'W', 1, 'codo'], ['Hp', 'K', 'F', -1, 'rodilla']].filter(([a, b, c, sg]) => {
+  if (!J[a + n] || !J[b + n] || !J[c + n]) return false;
+  const D = unit3(sub3(J[b + n], J[a + n])), F = unit3(sub3(J[c + n], J[b + n]));
+  if (Math.abs(D[2]) > 0.5 || Math.abs(F[2]) > 0.5) return false;
+  return dot3(F, unit3([-D[1], D[0], 0])) * sg < -0.21;
+}).map(([, , , , name]) => e.id + ' ' + name))))`);
+ok(!disl.length, `ningún codo ni rodilla se dobla al revés ${[...new Set(disl)].join(', ')}`);
+ok(L('framesOf(EXERCISES.remo_aros.fig).FR.every((J) => J.fw[1] > 0)'), 'en el remo invertido el personaje está boca arriba');
+ok(L('framesOf(EXERCISES.ext_muneca_lenta.fig).FR.every((J, i, all) => Math.abs(J.W1[1] - all[0].W1[1]) < 0.5)'), 'en la extensión de muñeca se mueve la mano y el antebrazo queda apoyado');
 ok(Object.values(L('REHAB')).every((p) => L(`EXERCISES['${p[1]}'] && EXERCISES['${p[2]}']`)), 'cada zona tiene ejercicios de fase 1 y 2');
 ok(L('Object.values(REHAB_OPTIONS).every((z) => [1, 2].every((f) => z[f].length && z[f].every((id) => EXERCISES[id] && EXERCISES[id].zone !== undefined || EXERCISES[id].tag)))'), 'las opciones de rehabilitación existen');
 ok(L('Object.entries(REHAB).every(([z, p]) => REHAB_OPTIONS[z][1][0] === p[1] && REHAB_OPTIONS[z][2][0] === p[2])'), 'la primera opción de cada fase es la del protocolo base');

@@ -39,32 +39,32 @@ const EXERCISES = {
   iso_ext_muneca: {
     name: 'Extensión de muñeca isométrica', kind: 'iso', impl: 'db', load0: 2, zone: 'codo_lat',
     cues: ['Sentado, antebrazo apoyado en el muslo, palma hacia abajo y la mano fuera de la rodilla.', 'Sostené la mancuerna con la muñeca recta o apenas levantada, sin moverla.', 'Dolor tolerable: hasta 3–4 sobre 10.'],
-    fig: { a: SEATED, props: [{ t: 'db', at: 'W1' }], scene: [CHAIR_SEAT] },
+    fig: { a: { ...SEATED, G1: [142, 100] }, props: [{ t: 'db', at: 'W1' }], scene: [CHAIR_SEAT] },
   },
   ext_muneca_lenta: {
     name: 'Extensión de muñeca lenta', kind: 'lento', impl: 'db', load0: 2, zone: 'codo_lat',
     cues: ['Misma posición, palma hacia abajo.', 'Subí la mano en 3 s y bajala en 3 s.', 'Si duele más de 4, bajá el peso.'],
-    fig: { a: { ...SEATED, W1: [132, 112] }, b: { ...SEATED, W1: [133, 90] }, props: [{ t: 'db', at: 'W1' }], scene: [CHAIR_SEAT], dur: 6 },
+    fig: { a: { ...SEATED, G1: [139.7, 105.7] }, b: { G1: [139.7, 94.3] }, props: [{ t: 'db', at: 'W1' }], scene: [CHAIR_SEAT], dur: 6 },
   },
   iso_flex_muneca: {
     name: 'Flexión de muñeca isométrica', kind: 'iso', impl: 'db', load0: 2, zone: 'codo_med',
     cues: ['Sentado, antebrazo en el muslo, palma hacia arriba.', 'Sostené la mancuerna con la muñeca recta, sin moverla.', 'Dolor tolerable: hasta 3–4 sobre 10.'],
-    fig: { a: SEATED, props: [{ t: 'db', at: 'W1' }], scene: [CHAIR_SEAT] },
+    fig: { a: { ...SEATED, G1: [142, 100] }, props: [{ t: 'db', at: 'W1' }], scene: [CHAIR_SEAT] },
   },
   flex_muneca_lenta: {
     name: 'Flexión de muñeca lenta', kind: 'lento', impl: 'db', load0: 2, zone: 'codo_med',
     cues: ['Palma hacia arriba, antebrazo apoyado.', 'Subí la mano en 3 s y bajala en 3 s.'],
-    fig: { a: { ...SEATED, W1: [132, 112] }, b: { ...SEATED, W1: [133, 90] }, props: [{ t: 'db', at: 'W1' }], scene: [CHAIR_SEAT], dur: 6 },
+    fig: { a: { ...SEATED, G1: [139.7, 105.7] }, b: { G1: [139.7, 94.3] }, props: [{ t: 'db', at: 'W1' }], scene: [CHAIR_SEAT], dur: 6 },
   },
   iso_prono: {
     name: 'Sostén neutro de muñeca', kind: 'iso', impl: 'db', load0: 2, zone: 'muneca',
     cues: ['Sentado, antebrazo en el muslo, la mancuerna vertical como un martillo.', 'Agarrala de un extremo (más difícil) o del centro (más fácil).', 'Muñeca recta, sin moverla.'],
-    fig: { a: SEATED, props: [{ t: 'db', at: 'W1' }], scene: [CHAIR_SEAT] },
+    fig: { a: { ...SEATED, G1: [142, 100] }, props: [{ t: 'db', at: 'W1' }], scene: [CHAIR_SEAT] },
   },
   prono_lenta: {
     name: 'Pronación y supinación lenta', kind: 'lento', impl: 'db', load0: 2, zone: 'muneca',
     cues: ['Mancuerna vertical agarrada de un extremo.', 'Girá la palma hacia abajo en 3 s y hacia arriba en 3 s.', 'El antebrazo no se mueve.'],
-    fig: { a: SEATED, props: [{ t: 'db', at: 'W1' }], scene: [CHAIR_SEAT], dur: 6 },
+    fig: { a: { ...SEATED, G1: [142, 100] }, props: [{ t: 'db', at: 'W1' }], scene: [CHAIR_SEAT], dur: 6 },
   },
   iso_pared: {
     name: 'Empuje isométrico contra la pared', kind: 'iso', impl: 'bw', zone: 'hombro',
@@ -111,12 +111,12 @@ const EXERCISES = {
   remo_silla: {
     name: 'Remo a un brazo apoyado en silla', kind: 'peso', impl: 'db', ratio: 0.25, tag: ['codo_lat', 'muneca'], alt: 'remo_aros_iso',
     cues: ['Mano libre en el asiento de una silla, espalda recta.', 'Tirá el codo hacia la cadera, agarre neutro (palma mirando al cuerpo).', 'Usá straps si te molesta el agarre.'],
-    fig: { a: { N: [130, 84], P: [88, 92], E1: [128, 108], W1: [127, 132], E2: [137, 100], W2: [140, 115], K1: [84, 121], F1: [80, 150], K2: [96, 122], F2: [100, 150] }, b: { E1: [112, 76], W1: [118, 98] }, props: [{ t: 'db', at: 'W1' }], scene: [{ t: 'chair', x: 130, y: 115, w: 40, back: 'right' }] },
+    fig: { a: { N: [130, 84], P: [88, 92], E1: [128, 108], W1: [131, 132], E2: [132, 100], W2: [140, 115], K1: [84, 121], F1: [80, 150], K2: [96, 122], F2: [100, 150] }, b: { E1: [112, 76], W1: [118, 98] }, props: [{ t: 'db', at: 'W1' }], scene: [{ t: 'chair', x: 130, y: 115, w: 40, back: 'right' }] },
   },
   rdl: {
     name: 'Peso muerto rumano con mancuernas', kind: 'peso', impl: 'db', ratio: 0.25, lower: true, tag: ['codo_lat', 'muneca'], alt: 'puente',
     cues: ['Mancuernas pegadas a las piernas, rodillas apenas flexionadas.', 'Llevá la cadera atrás hasta sentir los isquios, espalda recta.'],
-    fig: { a: { ...STAND, W1: [103, 92] }, b: { N: [124, 68], P: [88, 90], E1: [124, 92], W1: [123, 116], K1: [96, 120], F1: [96, 150] }, props: [{ t: 'db', at: 'W1' }] },
+    fig: { a: { ...STAND, W1: [111, 92] }, b: { N: [124, 68], P: [88, 90], E1: [122, 93], W1: [123, 117], K1: [96, 120], F1: [96, 150] }, props: [{ t: 'db', at: 'W1' }] },
   },
   lateral: {
     name: 'Elevaciones laterales', kind: 'peso', impl: 'db', ratio: 0.06, tag: ['hombro'],
@@ -131,7 +131,7 @@ const EXERCISES = {
   zancada: {
     name: 'Zancada inversa con mancuernas', kind: 'peso', impl: 'db', ratio: 0.15, lower: true, tag: ['rodilla'],
     cues: ['Paso largo hacia atrás, bajá la rodilla de atrás cerca del piso.', 'El peso sobre el talón de adelante.'],
-    fig: { a: STAND, b: { N: [100, 69], P: [100, 112], E1: [102, 92], W1: [103, 116], K1: [118, 118], F1: [118, 150], K2: [96, 144], F2: [74, 146], T2: [70, 150] }, props: [{ t: 'db', at: 'W1' }] },
+    fig: { a: STAND, b: { N: [100, 69], P: [100, 112], E1: [102, 92], W1: [103, 116], K1: [118, 118], F1: [118, 150], K2: [96, 144], F2: [74, 141], T2: [82, 150] }, props: [{ t: 'db', at: 'W1' }] },
   },
   press_hombros: {
     name: 'Press de hombros con mancuernas', kind: 'peso', impl: 'db', ratio: 0.15, tag: ['hombro', 'codo_med'],
@@ -141,12 +141,12 @@ const EXERCISES = {
   remo_aros: {
     name: 'Remo invertido en aros', kind: 'reps', impl: 'rings', tag: ['codo_lat', 'codo_med', 'muneca'], alt: 'remo_aros_iso',
     cues: ['Cuerpo recto inclinado, talones en el piso.', 'Tirá el pecho hacia los aros, palmas enfrentadas.', 'Más fácil: pies más atrás. Más difícil: pies más adelante.'],
-    fig: { a: { N: [132, 100], P: [94, 121], E1: [131, 77], W1: [129, 54], K1: [66, 136], F1: [40, 150] }, b: { N: [124, 85], P: [90, 113], E1: [108, 82], W1: [124, 66], K1: [64, 132], F1: [40, 150] }, props: [{ t: 'ring', at: 'W1', x: 128 }] },
+    fig: { a: { N: [68, 100], P: [106, 121], E1: [69, 77], W1: [66, 54], K1: [134, 136], F1: [160, 150], T1: [163, 141] }, b: { N: [76, 85], P: [110, 113], E1: [92, 82], W1: [76, 66], K1: [136, 132], F1: [160, 150], T1: [163, 141] }, props: [{ t: 'ring', at: 'W1', x: 72 }] },
   },
   swing: {
     name: 'Swing con pesa rusa', kind: 'peso', impl: 'kb', alsoDb: true, ratio: 0.3, lower: true, tag: ['codo_lat', 'muneca'], alt: 'puente',
     cues: ['La fuerza sale de la cadera, no de los brazos.', 'Subí la pesa hasta la altura del pecho y dejala caer entre las piernas.'],
-    fig: { a: { N: [120, 66], P: [86, 92], E1: [118, 90], W1: [110, 112], K1: [98, 120], F1: [98, 150] }, b: { ...STAND, E1: [124, 50], W1: [148, 52] }, props: [{ t: 'kb', at: 'W1' }], dur: 1.6 },
+    fig: { a: { N: [120, 66], P: [86, 92], E1: [114, 90], W1: [111, 112], K1: [98, 120], F1: [98, 150] }, b: { ...STAND, E1: [124, 50], W1: [148, 52] }, props: [{ t: 'kb', at: 'W1' }], dur: 1.6 },
   },
   curl_martillo: {
     name: 'Curl martillo', kind: 'peso', impl: 'db', ratio: 0.12, tag: ['codo_lat', 'muneca'], alt: 'curl_iso',
@@ -162,7 +162,7 @@ const EXERCISES = {
   remo_aros_iso: {
     name: 'Remo isométrico en aros', kind: 'iso', impl: 'rings', tag: ['codo_lat', 'muneca'],
     cues: ['Quedate arriba del remo con el pecho cerca de los aros.', 'Sin moverte; dolor hasta 3–4 sobre 10.'],
-    fig: { a: { N: [124, 85], P: [90, 113], E1: [108, 82], W1: [124, 66], K1: [64, 132], F1: [40, 150] }, props: [{ t: 'ring', at: 'W1', x: 126 }] },
+    fig: { a: { N: [76, 85], P: [110, 113], E1: [92, 82], W1: [76, 66], K1: [136, 132], F1: [160, 150], T1: [163, 141] }, props: [{ t: 'ring', at: 'W1', x: 74 }] },
   },
   puente: {
     name: 'Puente de glúteos con mancuerna', kind: 'peso', impl: 'db', ratio: 0.4, lower: true, tag: [],
@@ -196,7 +196,7 @@ Object.assign(EXERCISES, {
   face_pull: {
     name: 'Face pull con banda', kind: 'reps', impl: 'band', tag: ['hombro'],
     cues: ['Banda a la altura de la cara.', 'Tirá hacia la frente separando las manos, codos altos.', 'Apretá atrás 1 s y volvé despacio.'],
-    fig: { a: { ...STAND, E1: [124, 46], W1: [148, 44] }, b: { E1: [104, 38], W1: [124, 30] }, props: [{ t: 'band', at: 'W1', x: 176, y: 40 }], scene: [{ t: 'post', x: 176 }] },
+    fig: { a: { ...STAND, E1: [124, 46], W1: [148, 44] }, b: { E1: [100, 44], W1: [114, 38], z: { E: 28, W: 12 } }, props: [{ t: 'band', at: 'W1', x: 176, y: 40 }], scene: [{ t: 'post', x: 176 }] },
   },
 });
 // Biblioteca ampliada (v1.7): más opciones con mancuernas, pesa rusa y peso corporal para el editor de rutina.
@@ -206,7 +206,7 @@ Object.assign(EXERCISES, {
   remo_inclinado: {
     name: 'Remo inclinado con dos mancuernas', kind: 'peso', impl: 'db', ratio: 0.22, cat: 'tiron', tag: ['codo_lat', 'muneca'], alt: 'remo_aros_iso',
     cues: ['Cadera atrás, espalda recta, torso casi paralelo al piso.', 'Llevá los codos hacia la cadera, palmas enfrentadas.', 'Bajá controlando, sin redondear la espalda.'],
-    fig: { a: { ...HINGE, E1: [122, 94], W1: [121, 118] }, b: { E1: [102, 82], W1: [112, 100] }, props: [{ t: 'db', at: 'W1' }] },
+    fig: { a: { ...HINGE, E1: [122, 94], W1: [124, 118] }, b: { E1: [102, 82], W1: [112, 100] }, props: [{ t: 'db', at: 'W1' }] },
   },
   bulgara: {
     name: 'Sentadilla búlgara con mancuernas', kind: 'peso', impl: 'db', ratio: 0.12, lower: true, cat: 'piernas', tag: ['rodilla'],
@@ -220,7 +220,7 @@ Object.assign(EXERCISES, {
   hip_thrust: {
     name: 'Hip thrust con mancuerna', kind: 'peso', impl: 'db', ratio: 0.45, lower: true, cat: 'bisagra', tag: [],
     cues: ['Espalda alta apoyada en el borde de una silla o sillón firme.', 'Mancuerna sobre la cadera, sostenida con las manos.', 'Subí la cadera hasta alinear rodillas, cadera y hombros; apretá 1 s.'],
-    fig: { a: { N: [72, 110], P: [106, 134], E1: [86, 124], W1: [104, 128], K1: [130, 114], F1: [136, 150] }, b: { P: [110, 112], E1: [90, 104], W1: [108, 106], K1: [136, 112] }, props: [{ t: 'db', at: 'W1' }], scene: [{ t: 'chair', x: 30, y: 112, w: 36, back: 'left' }] },
+    fig: { a: { N: [72, 110], P: [106, 134], E1: [86, 124], W1: [104, 128], K1: [130, 114], F1: [136, 150] }, b: { P: [110, 112], E1: [88, 114], W1: [108, 106], K1: [136, 112] }, props: [{ t: 'db', at: 'W1' }], scene: [{ t: 'chair', x: 30, y: 112, w: 36, back: 'left' }] },
   },
   pullover: {
     name: 'Pullover con mancuerna', kind: 'peso', impl: 'db', needs: ['bench'], ratio: 0.15, cat: 'tiron', tag: ['hombro'],
@@ -235,12 +235,12 @@ Object.assign(EXERCISES, {
   curl_concentrado: {
     name: 'Curl concentrado', kind: 'peso', impl: 'db', ratio: 0.1, cat: 'brazos', tag: ['codo_lat', 'codo_med'],
     cues: ['Sentado, codo apoyado en la cara interna del muslo.', 'Subí la mancuerna sin mover el codo y bajá en 2–3 s.'],
-    fig: { a: { ...SEATED, N: [112, 70], E1: [120, 106], W1: [122, 130] }, b: { E1: [120, 106], W1: [106, 86] }, props: [{ t: 'db', at: 'W1' }], scene: [CHAIR_SEAT] },
+    fig: { a: { ...SEATED, N: [112, 70], E1: [120, 106], W1: [125, 130] }, b: { E1: [120, 106], W1: [131, 86] }, props: [{ t: 'db', at: 'W1' }], scene: [CHAIR_SEAT] },
   },
   patada_triceps: {
     name: 'Patada de tríceps', kind: 'peso', impl: 'db', ratio: 0.06, cat: 'brazos', tag: ['codo_med'],
     cues: ['Mano libre en una silla, espalda recta.', 'Brazo pegado al costado; estirá el codo hacia atrás y volvé despacio.'],
-    fig: { a: { N: [130, 84], P: [88, 92], E1: [108, 90], W1: [110, 112], E2: [137, 100], W2: [140, 115], K1: [84, 121], F1: [80, 150], K2: [96, 122], F2: [100, 150] }, b: { W1: [86, 90] }, props: [{ t: 'db', at: 'W1' }], scene: [{ t: 'chair', x: 130, y: 115, w: 40, back: 'right' }] },
+    fig: { a: { N: [130, 84], P: [88, 92], E1: [108, 90], W1: [110, 112], E2: [132, 100], W2: [140, 115], K1: [84, 121], F1: [80, 150], K2: [96, 122], F2: [100, 150] }, b: { W1: [86, 95] }, props: [{ t: 'db', at: 'W1' }], scene: [{ t: 'chair', x: 130, y: 115, w: 40, back: 'right' }] },
   },
   press_frances: {
     name: 'Press francés en el suelo', kind: 'peso', impl: 'db', ratio: 0.08, cat: 'brazos', tag: ['codo_med'],
@@ -250,12 +250,12 @@ Object.assign(EXERCISES, {
   flexiones: {
     name: 'Flexiones de brazos', kind: 'reps', impl: 'bw', cat: 'empuje', tag: ['hombro', 'muneca'],
     cues: ['Manos debajo de los hombros, cuerpo en línea recta.', 'Bajá el pecho cerca del piso con los codos a 45°.', 'Más fácil: con las rodillas apoyadas o las manos en una silla. Si molesta la muñeca, apoyá en mancuernas con agarre neutro.'],
-    fig: { a: { N: [136, 108], P: [96, 118], E1: [137, 128], W1: [138, 149], K1: [64, 128], F1: [36, 144], T1: [34, 150] }, b: { N: [136, 132], P: [96, 135], E1: [120, 136], K1: [64, 140], F1: [36, 146] }, dur: 2.4 },
+    fig: { a: { N: [136, 108], P: [96, 118], E1: [134, 128], W1: [136, 149], K1: [66, 131], F1: [36, 144], T1: [34, 150] }, b: { N: [136, 132], P: [96, 135], E1: [120, 136], K1: [64, 140], F1: [36, 146] }, dur: 2.4 },
   },
   pm_una_pierna: {
     name: 'Peso muerto a una pierna', kind: 'peso', impl: 'db', ratio: 0.12, lower: true, cat: 'bisagra', tag: ['codo_lat', 'muneca'], alt: 'puente',
     cues: ['Parado en una pierna, rodilla apenas flexionada.', 'Inclinate llevando la otra pierna atrás, en línea con el torso.', 'Volvé apretando el glúteo; apoyate en la pared si perdés el equilibrio.'],
-    fig: { a: { ...STAND }, b: { N: [130, 80], P: [92, 90], E1: [128, 104], W1: [127, 128], K1: [96, 120], F1: [96, 150], K2: [62, 88], F2: [34, 86], T2: [30, 78] }, props: [{ t: 'db', at: 'W1' }] },
+    fig: { a: { ...STAND }, b: { N: [130, 80], P: [92, 90], E1: [128, 104], W1: [129, 128], K1: [96, 120], F1: [96, 150], K2: [62, 88], F2: [34, 86], T2: [30, 78] }, props: [{ t: 'db', at: 'W1' }] },
   },
   sumo_kb: {
     name: 'Sentadilla sumo con pesa rusa', kind: 'peso', impl: 'kb', alsoDb: true, ratio: 0.35, lower: true, cat: 'piernas', tag: ['rodilla'],
@@ -275,7 +275,7 @@ Object.assign(EXERCISES, {
   dead_bug: {
     name: 'Dead bug', kind: 'reps', impl: 'bw', cat: 'core', tag: [],
     cues: ['Boca arriba, brazos al techo y piernas en mesa (90°).', 'Estirá un brazo hacia atrás y la pierna contraria hacia adelante sin despegar la zona lumbar.', 'Volvé y cambiá de lado. Lento y respirando.'],
-    fig: { a: { N: [60, 143], P: [103, 143], E1: [62, 121], W1: [62, 98], K1: [104, 112], F1: [128, 112] }, b: { E1: [46, 126], W1: [26, 124], K1: [128, 134], F1: [156, 140] }, dur: 3.4 },
+    fig: { a: { N: [60, 143], P: [103, 143], E1: [62, 121], W1: [59, 98], K1: [104, 112], F1: [128, 112] }, b: { E1: [46, 126], W1: [26, 124], K1: [128, 134], F1: [156, 140] }, dur: 3.4 },
   },
 });
 // Rehabilitación: alternativas por zona y fase (el usuario elige; la primera es la del video).
@@ -298,7 +298,7 @@ Object.assign(EXERCISES, {
   excentrico_muneca: {
     name: 'Excéntrico de muñeca', kind: 'lento', impl: 'db', load0: 2, zone: 'codo_lat',
     cues: ['Antebrazo apoyado en el muslo, palma hacia abajo.', 'Subí la mano ayudándote con la otra y bajala sola en 4 s.', 'Clásico para codo de tenista: la bajada es lo que cuenta.'],
-    fig: { a: { ...SEATED, W1: [133, 90] }, b: { ...SEATED, W1: [132, 112] }, props: [{ t: 'db', at: 'W1' }], scene: [CHAIR_SEAT], dur: 5 },
+    fig: { a: { ...SEATED, G1: [139.7, 94.3] }, b: { G1: [139.7, 105.7] }, props: [{ t: 'db', at: 'W1' }], scene: [CHAIR_SEAT], dur: 5 },
   },
   tyler_toalla: {
     name: 'Tyler twist con toalla', kind: 'lento', impl: 'bw', zone: 'codo_lat',

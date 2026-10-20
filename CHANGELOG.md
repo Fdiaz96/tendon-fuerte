@@ -2,6 +2,19 @@
 
 Todos los cambios de Tendón Fuerte, del más nuevo al más viejo.
 
+## 1.13.3 — Revisión de todas las animaciones
+
+Se revisaron las 49 animaciones una por una (inicio, mitad y final del movimiento) y se corrigieron las que se veían al revés o con articulaciones imposibles:
+
+- **Remo invertido en aros** (normal e isométrico): el personaje estaba boca abajo y los brazos parecían salirle de la espalda. Ahora está boca arriba, colgado de los aros.
+- **Extensión, flexión y excéntrico de muñeca**: antes se movía todo el antebrazo. Ahora el antebrazo queda apoyado en el muslo y solo se mueve la mano con la mancuerna, que es como se hace. En los isométricos y en la pronación la mano también se dibuja articulada.
+- **Curl concentrado**: la mano terminaba detrás del brazo (codo doblado al revés). Ahora sube por delante, hacia el hombro.
+- **Codos que se pasaban de rectos**: el brazo de apoyo en el remo en silla y en la patada de tríceps, peso muerto rumano, remo inclinado, swing, hip thrust (ahora los codos apuntan al piso), flexiones, peso muerto a una pierna y dead bug.
+- **Flexiones**: la rodilla se doblaba apenas hacia adelante. Ahora la pierna queda recta.
+- **Zancada inversa**: el pie de atrás apuntaba hacia atrás. Ahora apoya la punta mirando hacia adelante.
+- **Face pull**: los codos ahora se abren hacia los costados y quedan altos, con las manos a la altura de la cara, sin pasar por posiciones raras a mitad del movimiento.
+- Nuevos tests: ningún codo ni rodilla se dobla al revés en ningún fotograma, el remo invertido está boca arriba y en la extensión de muñeca solo se mueve la mano.
+
 ## 1.13.2 — Elevación lateral corregida
 
 - **Elevación lateral** (y la versión lenta de rehabilitación): los brazos ahora se abren hacia los costados hasta la altura de los hombros, como una T. Antes se iban hacia adelante, se veían torcidos y el brazo de atrás quedaba encima de la cabeza.

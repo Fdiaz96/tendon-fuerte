@@ -38,22 +38,24 @@ const prjV = (d) => [dot3(d, CAM.r), -dot3(d, CAM.u)];              // direcció
 const depth = (P) => dot3(P, CAM.v);                                 // más grande = más cerca
 
 // ——— De la postura de data.js a 3D ———
-const LIMB_Z = { E: 13, W: 13, K: 6.5, F: 6.5, T: 6.5 };   // distancia al centro del cuerpo (hacia los costados)
+const LIMB_Z = { E: 13, W: 13, G: 13, K: 6.5, F: 6.5, T: 6.5 };   // G: punta de la mano (si la muñeca se mueve)   // distancia al centro del cuerpo (hacia los costados)
 const UA = 19.5, FA = 23;                                  // largo de brazo y antebrazo (para deducir la profundidad de frente)
 function pose3D(raw, f) {
-  const front = !!f.front, zo = f.z || {}, J = {};
+  const front = !!f.front, zo = { ...f.z, ...raw.z }, J = {};   // z: por ejercicio o por postura
   const V = (pt, z) => (front ? [0, 150 - pt[1], z] : [pt[0] - 100, 150 - pt[1], z]);
   J.N = V(raw.N, 0); J.P = V(raw.P, 0);
   if (front) { J.N[2] = 100 - raw.N[0]; J.P[2] = 100 - raw.P[0]; }
   J.up = unit3(sub3(J.N, J.P)); J.fw = [J.up[1], -J.up[0], 0]; J.lat = [0, 0, 1];
   J.H = add3(J.N, scl3(J.up, 13));
   for (const n of ['1', '2']) {
-    const s = n === '1' ? 1 : -1, get = (k) => raw[k + n] ?? raw[k + '1'];   // lado lejano sin dato: espejo del cercano
+    const s = n === '1' ? 1 : -1;
+    // Lado lejano sin dato: espejo del cercano (la mano articulada, solo si la muñeca también es espejo).
+    const get = (k) => raw[k + n] ?? (k === 'G' && raw['W' + n] ? undefined : raw[k + '1']);
     J['S' + n] = front ? add3(J.N, [0, -4, 12.5 * s]) : add3(mix3(J.N, J.P, 0.12), [0, 0, 12.5 * s]);
     J['Hp' + n] = add3(J.P, [0, 0, 6.5 * s]);
-    for (const k of ['E', 'W', 'K', 'F', 'T']) {
+    for (const k of ['E', 'W', 'G', 'K', 'F', 'T']) {
       const p = get(k); if (!p) continue;
-      let z = zo[k] ?? LIMB_Z[k];
+      let z = zo[k] ?? (k === 'G' ? zo.W : null) ?? LIMB_Z[k];
       if (front && zo[k] == null) z = Math.max(s * (100 - p[0]), z);
       J[k + n] = V(p, z * s);
     }
@@ -91,6 +93,7 @@ function poseAt(A, B, t) {
     J['S' + n] = place('S' + n, 'N'); J['Hp' + n] = place('Hp' + n, 'P');
     if (A['E' + n]) J['E' + n] = bone(J['S' + n], 'S' + n, 'E' + n);
     if (A['W' + n]) J['W' + n] = bone(J['E' + n], 'E' + n, 'W' + n);
+    if (A['G' + n]) J['G' + n] = bone(J['W' + n], 'W' + n, 'G' + n);
     if (A['K' + n]) J['K' + n] = bone(J['Hp' + n], 'Hp' + n, 'K' + n);
     if (A['F' + n]) J['F' + n] = bone(J['K' + n], 'K' + n, 'F' + n);
     if (A['T' + n]) J['T' + n] = bone(J['F' + n], 'F' + n, 'T' + n);
@@ -194,6 +197,10 @@ function patchesOver(f, def, FR, n) {
     const prev = P.map((x) => ({ ...x }));
     for (let i = 1; i < P.length - 1; i++) for (const k of ['o', 'w']) P[i][k] = (prev[i - 1][k] + 2 * prev[i][k] + prev[i + 1][k]) / 4;
   }
+  for (const x of P) {   // después de suavizar, los mismos topes: no más ancho que 0,3 del largo ni fuera del contorno
+    x.w = Math.min(x.w, (0.3 * x.len) / x.R, 0.92);
+    if (Math.abs(x.o) + x.w > 0.92) x.o = Math.sign(x.o) * (0.92 - x.w);
+  }
   return P;
 }
 // Ángulo de cámara para un ejercicio: el que mejor muestra sus músculos (lado cercano) en todos los fotogramas,
@@ -272,7 +279,8 @@ function figureSVG(ex, { animate = true, size = '', crop = false, muscles = true
     [(J) => capsule(prj(J['F' + n]), prj(J['T' + n]), 4.4, 3.6), shade(n, 'shoe')],
   ];
   const armParts = (n) => [[seg('ua', n), shade(n, 'skin')], [seg('fa', n), shade(n, 'skin')], [seg('ua', n, -0.05, 0.42, 6.6, 6.1), shade(n, 'shirt')]];
-  const hand = (n) => path((J) => (J['W' + n] ? circlePath(prj(J['W' + n]), 3.9) : ''), `fill="${shade(n, 'skin')}" stroke="${L}" stroke-width="1.6"`);
+  // Mano: puño redondo; si la postura trae la punta de la mano (G), una cápsula que gira en la muñeca.
+  const hand = (n) => path((J) => (J['G' + n] ? capsule(prj(J['W' + n]), prj(J['G' + n]), 3.4, 3.9) : J['W' + n] ? circlePath(prj(J['W' + n]), 3.9) : ''), `fill="${shade(n, 'skin')}" stroke="${L}" stroke-width="1.6" stroke-linejoin="round"`);
   const torso = (J) => { const [p, q, ra, rb] = seg2('to', J); return capsule(p, q, ra, rb); };
   const pelvis = (J) => {
     const a = mix3(J.N, J.P, 0.8), [p, q] = [prj(a), prj(J.P)], [ux, uy] = unit(q[0] - p[0], q[1] - p[1]), m = [-uy, ux];
@@ -329,7 +337,7 @@ function figureSVG(ex, { animate = true, size = '', crop = false, muscles = true
   ].sort((a, b) => a.z - b.z);
 
   // Piso: baldosa isométrica que abarca al personaje y la escena; sombra debajo del cuerpo.
-  const pts3 = FR.flatMap((J) => ['N', 'P', 'H', 'S1', 'S2', 'E1', 'E2', 'W1', 'W2', 'K1', 'K2', 'F1', 'F2', 'T1', 'T2'].filter((k) => J[k]).map((k) => J[k]));
+  const pts3 = FR.flatMap((J) => ['N', 'P', 'H', 'S1', 'S2', 'E1', 'E2', 'W1', 'W2', 'G1', 'G2', 'K1', 'K2', 'F1', 'F2', 'T1', 'T2'].filter((k) => J[k]).map((k) => J[k]));
   const scene = (f.scene || []).map((s) => sceneBoxes(s, !!f.front, A));
   const sceneP = scene.flatMap((s) => s.pts);
   const xs = [...pts3, ...sceneP].map((p) => p[0]), zs = [...pts3, ...sceneP].map((p) => p[2]);
@@ -406,14 +414,14 @@ function sceneBoxes(s, front, A) {
 // antebrazo, 'along' a lo largo del antebrazo. Con dos agarres (p. ej. ['end', 'neutral']) pasa de uno al otro.
 function handleDir(grip, J, n, front) {
   if (grip === 'end') return front ? [1, 0, 0] : [0, 0, 1];   // de punta: hacia quien mira en el dibujo original
-  const d = unit3(sub3(J['W' + n], J['E' + n]));
+  const d = J['G' + n] ? unit3(sub3(J['G' + n], J['W' + n])) : unit3(sub3(J['W' + n], J['E' + n]));
   if (grip === 'along') return d;
   const a = [-d[1], d[0], 0];
   return front || Math.hypot(...a) < 1e-3 ? [1, 0, 0] : unit3(a);
 }
 function propSVG(p, FR, ts, { path, group, animV, animate, front }) {
   const L = PAL.line, n = p.at.slice(-1), A = FR[0];
-  const posOf = (J) => (p.mid ? mix3(J.W1, J.W2, 0.5) : J[p.at]);
+  const posOf = (J) => (p.mid ? mix3(J.W1, J.W2, 0.5) : (p.at[0] === 'W' && J['G' + n] && mix3(J['W' + n], J['G' + n], 0.55)) || J[p.at]);   // con mano articulada, la pesa va en la mano
   if (p.t === 'db') {
     const one = (grip, extra = '') => {
       // Discos: cilindro (cara interna, costado y cara externa) a cada lado de la mano; mango entre ellos.
