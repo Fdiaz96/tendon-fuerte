@@ -136,6 +136,15 @@ await click('[data-action="check"][data-zone="codo_lat"][data-val="igual"]');
 ok((await state()).zones.codo_lat.secs === 35, 'codo ya ajustado ayer → no vuelve a bajar');
 ok(await page.locator('[data-action="check"]').count() === 0, 'no vuelve a preguntar');
 
+// 6b. Anotar dolor en cualquier momento
+await click('[data-tab="home"]');
+await click('[data-action="quick-pain"]');
+await click('#painsheet [data-zone="codo_lat"][data-n="3"]');
+await click('#painsheet [data-zone="muneca"][data-n="1"]');
+await click('[data-action="save-pain"]');
+ok((await state()).sessions[0].type === 'dolor' && (await state()).sessions[0].pain.muneca === 1, 'anota el dolor sin hacer una sesión');
+await page.evaluate(() => { S.sessions = S.sessions.filter((x) => x.type !== 'dolor'); persist(); render(); });
+
 // 7. Ejercicio propio del fisio (y elegir otra opción de rehabilitación)
 await click('[data-tab="tendons"]');
 await page.evaluate(() => { S.zones.codo_lat.phase = 2; render(); });
@@ -216,6 +225,25 @@ dl = page.waitForEvent('download'); await click('[data-action="report"]');
 const rep = fs.readFileSync(await (await dl).path(), 'utf8');
 if (SHOTS) fs.writeFileSync(`${SHOTS}/informe.html`, rep);
 ok(rep.includes('Informe') && rep.includes('Codo lateral') && rep.includes('<svg'), 'el informe trae zonas y gráfico de dolor');
+
+// 8d2. Estancamiento y descarga
+await page.evaluate(() => {
+  S.lifts.rdl = { w: 10, e1rm: 14 };
+  for (let i = 0; i < 3; i++) S.sessions.push({ id: 'st' + i, date: addDays(today(), -20 - i), type: 'entreno', tpl: 'A', items: [{ ex: 'rdl', sets: [{ w: 10, reps: 9 }, { w: 10, reps: 9 }] }, { ex: 'lateral', sets: [{ w: 4, reps: 9 }] }] });
+  S.lifts.lateral = { w: 4, e1rm: 5 };
+  S.painMode = false; persist(); render();
+});
+await click('[data-tab="home"]');
+ok(await page.locator('[data-action="deload"]').count() === 1, 'sugiere semana de descarga con 2 ejercicios estancados');
+await click('[data-action="deload"]');
+await click('[data-tab="train"]');
+ok((await page.locator('#view-train').textContent()).includes('Semana de descarga'), 'el entreno avisa la semana de descarga');
+await click('#view-train [data-action="deload-off"]');
+const rdlRow = page.locator('#view-train .ex', { hasText: 'Peso muerto rumano' }).first();
+ok(await rdlRow.locator('[data-action="unstall"]').count() === 1, 'marca el peso muerto como estancado');
+await rdlRow.locator('[data-action="unstall"]').click(); await page.waitForTimeout(100);
+ok((await state()).lifts.rdl.w === await page.evaluate(() => roundDown(weightSteps(S.equip, 'db'), 9)), 'bajar 10 %: de 10 a 9 kg redondeado a lo que se puede armar');
+await page.evaluate(() => { S.sessions = S.sessions.filter((x) => !x.id.startsWith('st')); S.painMode = true; persist(); render(); });
 
 // 8e. Eliminar sesión y deshacer
 await click('[data-tab="history"]');

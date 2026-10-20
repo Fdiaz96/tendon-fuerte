@@ -177,6 +177,24 @@ function warmupSets(w, steps) {
   return out;
 }
 
+// ——— Estancamiento ———
+// Un ejercicio con peso está estancado si en las últimas 3 sesiones (sin tope por dolor ni descarga) usó el mismo peso
+// y las repeticiones totales no subieron.
+function stalled(state, exId) {
+  const hist = [];
+  for (const s of state.sessions) {
+    if (s.type !== 'entreno') continue;
+    const it = s.items.find((i) => i.ex === exId && !i.capped);
+    if (it?.sets.length) hist.push(it);
+    if (hist.length === 3) break;
+  }
+  if (hist.length < 3) return false;
+  const top = (it) => Math.max(...it.sets.map((x) => x.w || 0)), reps = (it) => it.sets.reduce((a, x) => a + (x.reps || 0), 0);
+  return hist.every((it) => top(it) === top(hist[0])) && reps(hist[0]) <= reps(hist[2]);
+}
+const DAY_KEYS = ['do', 'lu', 'ma', 'mi', 'ju', 'vi', 'sa'];
+const weekdayKey = (k) => DAY_KEYS[parseDay(k).getDay()];
+
 // ——— Semana y racha ———
 // Entrenos y rehabilitaciones de la semana actual, con su objetivo.
 function weekStats(state, today) {

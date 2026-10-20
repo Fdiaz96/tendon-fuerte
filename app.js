@@ -1,7 +1,7 @@
 // Tendón Fuerte — rehabilitación de tendones y entreno con mancuernas. Los datos viven solo en el celular (IndexedDB).
 // Protocolo de tendones del video de Jeremy Ethier con Keith Baar y Coach Q; reglas en logic.js, bocetos en figures.js.
 
-const APP_VERSION = '1.8.0';
+const APP_VERSION = '1.9.0';
 const DAY_NAMES = { lu: 'Lu', ma: 'Ma', mi: 'Mi', ju: 'Ju', vi: 'Vi', sa: 'Sá', do: 'Do' };
 const SIDES = { der: 'derecha', izq: 'izquierda', ambos: 'ambos lados' };
 const REST_SECS = 90, ISO_REST = 60;
@@ -104,13 +104,16 @@ function planFor(tpl) {
     const ex = r?.mode === 'alt' ? resolveEx(orig.alt) : orig;
     const impl = implFor(ex, S.equip);
     const steps = weightSteps(S.equip, impl);
-    const item = { ex, orig, r, impl, steps, sets: counts[i], missing: !impl };
+    const deload = S.plan.deload === weekKey(today());
+    const item = { ex, orig, r, impl, steps, sets: deload ? Math.max(1, counts[i] - 1) : counts[i], missing: !impl, deload };
     if (ex.kind === 'peso') {
       const lift = S.lifts[ex.id];
       item.calib = !lift;
       item.base = lift ? roundDown(steps, lift.w) || lift.w : ex.ratio ? startWeight(S.profile, ex, steps) : roundDown(steps, ex.start || 0);
       item.w = r ? painCap(item.base, steps) : item.base;
+      if (deload && !item.calib) item.w = roundDown(steps, item.w * 0.9);
       item.capped = !!r && item.w < item.base;
+      item.stalled = !r && !deload && stalled(S, ex.id);
     } else if (ex.kind === 'tiempo') item.secs = S.lifts[ex.id]?.secs || 30;
     else if (ex.kind === 'iso') { item.secs = 30; item.w = ex.load0 ? roundDown(steps, ex.load0) : 0; }
     return item;
@@ -187,10 +190,16 @@ function renderHome() {
   }
   if (S.onboarded && S.seenVersion !== APP_VERSION && S.seenVersion !== '') h += `<div class="card acc"><div class="row"><h3>Novedades de la versión ${APP_VERSION}</h3><button class="link" data-action="news-seen" aria-label="Cerrar">✕</button></div><button class="link" data-action="news">Ver qué cambió</button></div>`;
   const next = S.plan.next, plan = planFor(next), last = S.sessions.find((s) => s.type === 'entreno');
+  const doneToday = last?.date === t, trainDay = S.rem.train.includes(weekdayKey(t));
+  const dayMsg = doneToday ? '✓ Entreno de hoy hecho' : trainDay ? 'Hoy toca entrenar' : 'Hoy es día de descanso (podés entrenar igual)';
   h += `<div class="card acc"><div class="row"><span class="tag acc">Entreno ${next}</span><span class="muted small">${last ? `Último: ${fmtDate(last.date)}` : 'Primer entreno'}</span></div>
-    <h3 style="margin-top:8px">Cuerpo completo · ${plan.filter((p) => !p.missing).length} ejercicios</h3>
+    <p class="small" style="margin:8px 0 0;color:${doneToday || trainDay ? 'var(--acc)' : 'var(--muted)'}">${dayMsg}${S.plan.deload === weekKey(t) ? ' · semana de descarga' : ''}</p>
+    <h3 style="margin-top:4px">Cuerpo completo · ${plan.filter((p) => !p.missing).length} ejercicios</h3>
     <p class="muted small">${plan.filter((p) => !p.missing).map((p) => esc(p.ex.name)).join(' · ')}</p>
     <button class="cta" data-action="start-workout" data-tpl="${next}">Empezar</button></div>`;
+  if (S.painMode && activeZones().length) h += `<button class="sec" style="width:100%;margin-bottom:12px" data-action="quick-pain">Anotar cómo está el dolor ahora</button>`;
+  const stuck = Object.values(TEMPLATES).flat().concat(S.templates.A, S.templates.B).filter((id, i, a) => a.indexOf(id) === i && S.lifts[id] && stalled(S, id));
+  if (stuck.length >= 2 && S.plan.deload !== weekKey(t) && S.plan.deloadOffer !== weekKey(t)) h += `<div class="card acc"><h3>¿Semana de descarga?</h3><p class="muted small">${stuck.length} ejercicios no progresan hace 3 sesiones (${stuck.slice(0, 3).map((id) => esc(getEx(id)?.name.toLowerCase() || id)).join(', ')}). Una semana con una serie menos y 90 % del peso suele destrabar.</p><div class="btns"><button class="cta" data-action="deload">Hacer descarga esta semana</button></div><button class="link" data-action="deload-no">Ahora no</button></div>`;
   if (suggestThreeDays(S, t)) h += `<div class="card acc"><h3>¿Pasamos a 3 días por semana?</h3><p class="muted small">Venís constante. El volumen sube de a 30 % por semana.</p><button class="link" data-action="three-days">Sí, 3 días</button></div>`;
   $('view-home').innerHTML = h;
 }
@@ -201,13 +210,14 @@ function renderTrain() {
   let h = `<div class="title-row"><h1>Entreno</h1><button class="link" data-action="edit-routine">${editRoutine ? 'Listo' : 'Editar rutina'}</button></div>
     <p class="muted">Cuerpo completo A/B · ${S.profile.days} días por semana · doble progresión 8–12 reps.</p>`;
   if (!S.profile.weight) h += `<div class="note acc">Completá tu peso en Ajustes para que la app estime cuánto levantar.</div>`;
+  if (S.plan.deload === weekKey(today())) h += `<div class="note acc">Semana de descarga: una serie menos y 90 % del peso. <button class="link small" data-action="deload-off">Cancelar</button></div>`;
   if (editRoutine) h += `<div class="note acc">Cambiá, quitá, agregá u ordená ejercicios. Si tenés una máquina que no está, cargala en Ajustes → Equipo y creá tu ejercicio.</div>`;
   for (const tpl of ['A', 'B']) {
     const plan = planFor(tpl);
     h += `<h2>Día ${tpl}${S.plan.next === tpl ? ' · toca hoy' : ''}</h2><div class="card">`;
     h += plan.map((p, i) => `<div class="ex"${editRoutine ? '' : ` data-action="ex-detail" data-ex="${p.ex.id}"`} style="padding:6px 0">
         <div class="thumb">${figureSVG(p.ex, { animate: false, crop: true })}</div>
-        <div class="info"><h3>${esc(p.ex.name)}</h3><p class="muted small">${p.missing ? 'Falta equipo' : `${p.sets} × ${setLabel(p)}`}${p.r ? ` · <span style="color:var(--pain)">${p.r.mode === 'alt' ? 'variante amable' : 'al 60 %'}</span>` : ''}</p></div>
+        <div class="info"><h3>${esc(p.ex.name)}</h3><p class="muted small">${p.missing ? 'Falta equipo' : `${p.sets} × ${setLabel(p)}`}${p.r ? ` · <span style="color:var(--pain)">${p.r.mode === 'alt' ? 'variante amable' : 'al 60 %'}</span>` : ''}</p>${p.stalled && !editRoutine ? `<p class="small" style="color:var(--acc);margin:2px 0 0">Estancado · <button class="link small" data-action="unstall" data-ex="${p.ex.id}">bajar 10 % y volver a subir</button></p>` : ''}</div>
         ${editRoutine ? `<div class="tools"><button data-action="routine-move" data-tpl="${tpl}" data-i="${i}" data-d="-1" aria-label="Subir" ${i ? '' : 'disabled'}>↑</button><button data-action="routine-move" data-tpl="${tpl}" data-i="${i}" data-d="1" aria-label="Bajar" ${i < plan.length - 1 ? '' : 'disabled'}>↓</button><button data-action="routine-pick" data-tpl="${tpl}" data-i="${i}" aria-label="Cambiar">⇄</button><button data-action="routine-del" data-tpl="${tpl}" data-i="${i}" aria-label="Quitar">✕</button></div>`
           : `<div class="w">${p.ex.kind === 'peso' ? `<span class="num">${p.w || '—'}</span><div class="small muted">${p.calib ? 'calibrar' : 'kg'}</div>` : ''}</div>`}</div>`).join('');
     h += editRoutine ? `<button class="sec" style="width:100%;margin-top:10px" data-action="routine-pick" data-tpl="${tpl}">+ Agregar ejercicio</button>`
@@ -402,7 +412,7 @@ function setDone(i, j) {
   if (r.done && it.rows.some((x) => !x.done)) startRest(k === 'iso' ? ISO_REST : S.prefs.rest || REST_SECS);
 }
 function finishWorkout() {
-  const items = W.items.map((it) => ({ ex: it.ex.id, name: it.ex.name, maint: it.maint || undefined, capped: !!it.r, sets: it.rows.filter((r) => r.done).map((r) => ({ w: Number(r.w) || 0, reps: Number(r.reps) || 0, rir: r.rir === '' ? null : Number(r.rir), secs: Number(r.secs) || 0 })) }))
+  const items = W.items.map((it) => ({ ex: it.ex.id, name: it.ex.name, maint: it.maint || undefined, capped: !!it.r || !!it.deload, sets: it.rows.filter((r) => r.done).map((r) => ({ w: Number(r.w) || 0, reps: Number(r.reps) || 0, rir: r.rir === '' ? null : Number(r.rir), secs: Number(r.secs) || 0 })) }))
     .filter((x) => x.sets.length);
   if (!items.length) return toast('Marcá al menos una serie como hecha.');
   const prs = [], ups = [];
@@ -415,7 +425,7 @@ function finishWorkout() {
       if (prev && best > prev + 0.05) prs.push({ name: it.ex.name, val: `${Math.round(best * 10) / 10} kg (1RM estimado)` });
       lift.e1rm = Math.round(Math.max(lift.e1rm || 0, best) * 10) / 10;
       // Con tope por dolor o recién calibrado no se progresa: el peso de trabajo ya quedó definido.
-      if (!it.r && !it.calibrated) lift.w = progress(lift.w, sets.map((s) => ({ reps: Number(s.reps) })), it.steps);
+      if (!it.r && !it.calibrated && !it.deload) lift.w = progress(lift.w, sets.map((s) => ({ reps: Number(s.reps) })), it.steps);
       if (lift.w !== w0) ups.push({ name: it.ex.name, from: w0, to: lift.w });
     }
     if (it.ex.kind === 'reps') {
@@ -436,7 +446,7 @@ function finishWorkout() {
 function saveSession(session) {
   S.sessions.unshift(session); persist(); render();
   if (session.type === 'entreno') return showSummary(session);
-  toast('Rehabilitación guardada.');
+  toast(session.type === 'dolor' ? 'Dolor anotado.' : 'Rehabilitación guardada.');
 }
 // Pantalla de cierre del entreno: números grandes, récords y lo que sube la próxima vez.
 function showSummary(s) {
@@ -703,7 +713,7 @@ function renderHistory() {
     ${lineChart(painHistory(histZone), { yMax: 10, limit: PAIN_MAX, unit: '/10', color: 'var(--pain)' })}` : '<p class="muted small">Cuando registres dolor vas a ver su evolución acá.</p>'}</div>`;
   h += `<h2>Peso por ejercicio</h2><div class="card acc">${exIds.length ? `<select data-action="hist-ex" aria-label="Ejercicio">${exIds.map((e) => `<option value="${e}" ${e === histEx ? 'selected' : ''}>${esc(getEx(e)?.name || e)}</option>`).join('')}</select>
     ${lineChart(weightHistory(histEx), { unit: 'kg', color: 'var(--acc)' })}` : '<p class="muted small">Después de tus primeros entrenos vas a ver el progreso acá.</p>'}</div>`;
-  h += `<h2>Sesiones</h2><div class="card">${S.sessions.length ? S.sessions.slice(0, 60).map((s) => `<details class="sess-d"><summary class="sess"><span><span class="what">${s.type === 'entreno' ? `Entreno ${s.tpl}` : `Rehab · ${s.slot}`}</span><br><span class="muted small">${fmtDate(s.date)}${s.min ? ` · ${s.min} min · ${s.sets} series` : ''}${s.prs?.length ? ' · 🏆' : ''}${s.pain ? ' · dolor ' + Object.entries(s.pain).map(([z, v]) => `${zoneName(z).toLowerCase()} ${v}`).join(', ') : ''}</span></span><span class="tag ${s.type === 'entreno' ? 'acc' : 'pain'}">${s.items.length} ej.</span></summary>
+  h += `<h2>Sesiones</h2><div class="card">${S.sessions.length ? S.sessions.slice(0, 60).map((s) => `<details class="sess-d"><summary class="sess"><span><span class="what">${s.type === 'entreno' ? `Entreno ${s.tpl}` : s.type === 'dolor' ? 'Registro de dolor' : `Rehab · ${s.slot}`}</span><br><span class="muted small">${fmtDate(s.date)}${s.min ? ` · ${s.min} min · ${s.sets} series` : ''}${s.prs?.length ? ' · 🏆' : ''}${s.pain ? ' · dolor ' + Object.entries(s.pain).map(([z, v]) => `${zoneName(z).toLowerCase()} ${v}`).join(', ') : ''}</span></span><span class="tag ${s.type === 'entreno' ? 'acc' : 'pain'}">${s.items.length} ej.</span></summary>
       <ul class="small muted">${s.items.map((i) => `<li>${esc(getEx(i.ex)?.name || i.name || i.ex)}: ${i.sets.map((x) => (x.w ? `${x.w}×` : '') + (x.reps || (x.secs ? x.secs + 's' : '✓'))).join(', ')}</li>`).join('')}</ul>
       <button class="link danger small" data-action="del-session" data-id="${s.id}">Eliminar sesión</button></details>`).join('') : '<p class="muted small">Todavía no hay sesiones.</p>'}</div>`;
   $('view-history').innerHTML = h;
@@ -938,6 +948,11 @@ document.addEventListener('click', (e) => {
     'cancel-rehab': () => { if (confirm('¿Salir sin guardar la sesión?')) { clearInterval(R?.timer); R = null; $('rsheet').close(); keepAwake(false); } },
     'pref': () => { S.prefs[d.k] = d.v === undefined ? !S.prefs[d.k] : Number(d.v); persist(); render(); if (d.k === 'sound' || d.k === 'voice') cue('go', 'Así suena'); },
     'news': openNews,
+    'quick-pain': () => askPain({ id: uid(), date: today(), type: 'dolor', items: [] }, activeZones()),
+    'deload': () => { S.plan.deload = weekKey(today()); persist(); render(); toast('Semana de descarga: una serie menos y 90 % del peso. La próxima semana seguís normal.'); },
+    'deload-no': () => { S.plan.deloadOffer = weekKey(today()); persist(); render(); },
+    'deload-off': () => { S.plan.deload = ''; persist(); render(); },
+    'unstall': () => { const l = S.lifts[d.ex], steps = weightSteps(S.equip, implFor(getEx(d.ex), S.equip)); l.w = roundDown(steps, l.w * 0.9); persist(); render(); toast(`${getEx(d.ex).name}: ${fmtKg(l.w)}. Volvé a subir desde acá.`); },
     'rehab-choice': () => {
       const z = S.zones[d.zone], ex = EXERCISES[d.ex], steps = weightSteps(S.equip, implFor(ex, S.equip));
       z.choice = { ...z.choice, [Math.min(2, z.phase)]: d.ex };

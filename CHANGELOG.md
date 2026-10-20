@@ -2,6 +2,13 @@
 
 Todos los cambios de Tendón Fuerte, del más nuevo al más viejo.
 
+## 1.9.0 — Inicio más inteligente
+
+- **Hoy toca o no**: la tarjeta de entreno dice "Hoy toca entrenar", "Hoy es día de descanso (podés entrenar igual)" o "✓ Entreno de hoy hecho", según los días que elegiste en Ajustes → Recordatorios.
+- **Anotar el dolor en cualquier momento** (con el modo dolor): un botón en Inicio registra cómo está cada zona sin hacer una sesión. Cuenta para los gráficos, el informe y el criterio para avanzar de fase.
+- **Detección de estancamiento**: si un ejercicio con peso repite el mismo peso 3 sesiones sin sumar repeticiones, aparece "Estancado · bajar 10 % y volver a subir" en Entreno.
+- **Semana de descarga**: cuando hay 2 o más ejercicios estancados, Inicio la sugiere. Esa semana va con una serie menos y el 90 % del peso, sin progresar; la semana siguiente vuelve todo a la normalidad (se puede cancelar).
+
 ## 1.8.0 — Opciones de rehabilitación
 
 - **Elegí el ejercicio de rehabilitación** de cada zona y fase (Tendones → tu zona → *Otras opciones para esta fase*). La primera opción sigue siendo la del protocolo del video.
