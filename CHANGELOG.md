@@ -2,6 +2,12 @@
 
 Todos los cambios de Tendón Fuerte, del más nuevo al más viejo.
 
+## 1.10.0 — Tema claro
+
+- **Tema claro opcional** (Ajustes → *Tema*): Oscuro (sigue siendo el predeterminado), Claro o Según el sistema. El claro se lee mejor a pleno sol.
+- En claro, el verde lima queda para los botones y los textos de acento pasan a verde oscuro para que se lean bien; los avisos naranjas y verdes también se adaptan.
+- El tema se aplica antes de dibujar la pantalla, sin parpadeo, y también cambia el color de la barra del celular.
+
 ## 1.9.0 — Inicio más inteligente
 
 - **Hoy toca o no**: la tarjeta de entreno dice "Hoy toca entrenar", "Hoy es día de descanso (podés entrenar igual)" o "✓ Entreno de hoy hecho", según los días que elegiste en Ajustes → Recordatorios.

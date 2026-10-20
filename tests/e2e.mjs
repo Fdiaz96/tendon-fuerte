@@ -209,6 +209,16 @@ ok(await page.locator('#wsheet .plates').count() > 0, 'en la sesión muestra los
 await shot('19-discos');
 await click('#wsheet [data-action="cancel-workout"]');
 
+// 8b3. Tema claro
+await click('[data-tab="settings"]');
+await click('#view-settings [data-action="theme"][data-v="light"]');
+ok(await page.evaluate(() => document.documentElement.dataset.theme) === 'light', 'cambia al tema claro');
+ok(await page.evaluate(() => getComputedStyle(document.body).backgroundColor) === 'rgb(242, 243, 245)', 'el fondo pasa a claro');
+await click('[data-tab="home"]'); await shot('21-claro-inicio');
+await click('[data-tab="train"]'); await shot('22-claro-entreno');
+await click('[data-tab="settings"]');
+await click('#view-settings [data-action="theme"][data-v="dark"]');
+
 // 8c. Preferencias de sesión y novedades
 await click('[data-tab="settings"]');
 await click('#view-settings [data-action="pref"][data-k="rest"][data-v="120"]');

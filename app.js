@@ -1,7 +1,7 @@
 // Tendón Fuerte — rehabilitación de tendones y entreno con mancuernas. Los datos viven solo en el celular (IndexedDB).
 // Protocolo de tendones del video de Jeremy Ethier con Keith Baar y Coach Q; reglas en logic.js, bocetos en figures.js.
 
-const APP_VERSION = '1.9.0';
+const APP_VERSION = '1.10.0';
 const DAY_NAMES = { lu: 'Lu', ma: 'Ma', mi: 'Mi', ju: 'Ju', vi: 'Vi', sa: 'Sá', do: 'Do' };
 const SIDES = { der: 'derecha', izq: 'izquierda', ambos: 'ambos lados' };
 const REST_SECS = 90, ISO_REST = 60;
@@ -23,7 +23,7 @@ const DEFAULT = () => ({
   zones: {}, lifts: {}, sessions: [], checks: [], custom: [],
   plan: { budget: 0, week: '', next: 'A' },
   rem: { am: '08:00', pm: '20:00', train: ['lu', 'ju'], trainAt: '19:00' },
-  prefs: { sound: true, voice: false, rest: 90, auto: true }, seenVersion: '',
+  prefs: { sound: true, voice: false, rest: 90, auto: true, theme: 'dark' }, seenVersion: '',
 });
 let S = DEFAULT();
 
@@ -59,6 +59,16 @@ function toast(msg, undo) {
   if (undo) t.insertAdjacentHTML('beforeend', '<button type="button" data-action="undo">Deshacer</button>');
   clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.hidden = true; toastUndo = null; }, undo ? 6000 : 3500);
 }
+
+// ——— Tema ———
+function applyTheme() {
+  const pref = S.prefs.theme || 'dark';
+  const t = pref === 'system' ? (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark') : pref;
+  document.documentElement.dataset.theme = t;
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', t === 'light' ? '#F2F3F5' : '#0E0F11');
+  try { localStorage.setItem('tf-theme', t); } catch {}
+}
+matchMedia('(prefers-color-scheme: light)').addEventListener?.('change', () => S.prefs.theme === 'system' && applyTheme());
 
 // ——— Navegación ———
 let tab = 'home';
@@ -193,7 +203,7 @@ function renderHome() {
   const doneToday = last?.date === t, trainDay = S.rem.train.includes(weekdayKey(t));
   const dayMsg = doneToday ? '✓ Entreno de hoy hecho' : trainDay ? 'Hoy toca entrenar' : 'Hoy es día de descanso (podés entrenar igual)';
   h += `<div class="card acc"><div class="row"><span class="tag acc">Entreno ${next}</span><span class="muted small">${last ? `Último: ${fmtDate(last.date)}` : 'Primer entreno'}</span></div>
-    <p class="small" style="margin:8px 0 0;color:${doneToday || trainDay ? 'var(--acc)' : 'var(--muted)'}">${dayMsg}${S.plan.deload === weekKey(t) ? ' · semana de descarga' : ''}</p>
+    <p class="small" style="margin:8px 0 0;color:${doneToday || trainDay ? 'var(--acc-fg)' : 'var(--muted)'}">${dayMsg}${S.plan.deload === weekKey(t) ? ' · semana de descarga' : ''}</p>
     <h3 style="margin-top:4px">Cuerpo completo · ${plan.filter((p) => !p.missing).length} ejercicios</h3>
     <p class="muted small">${plan.filter((p) => !p.missing).map((p) => esc(p.ex.name)).join(' · ')}</p>
     <button class="cta" data-action="start-workout" data-tpl="${next}">Empezar</button></div>`;
@@ -217,7 +227,7 @@ function renderTrain() {
     h += `<h2>Día ${tpl}${S.plan.next === tpl ? ' · toca hoy' : ''}</h2><div class="card">`;
     h += plan.map((p, i) => `<div class="ex"${editRoutine ? '' : ` data-action="ex-detail" data-ex="${p.ex.id}"`} style="padding:6px 0">
         <div class="thumb">${figureSVG(p.ex, { animate: false, crop: true })}</div>
-        <div class="info"><h3>${esc(p.ex.name)}</h3><p class="muted small">${p.missing ? 'Falta equipo' : `${p.sets} × ${setLabel(p)}`}${p.r ? ` · <span style="color:var(--pain)">${p.r.mode === 'alt' ? 'variante amable' : 'al 60 %'}</span>` : ''}</p>${p.stalled && !editRoutine ? `<p class="small" style="color:var(--acc);margin:2px 0 0">Estancado · <button class="link small" data-action="unstall" data-ex="${p.ex.id}">bajar 10 % y volver a subir</button></p>` : ''}</div>
+        <div class="info"><h3>${esc(p.ex.name)}</h3><p class="muted small">${p.missing ? 'Falta equipo' : `${p.sets} × ${setLabel(p)}`}${p.r ? ` · <span style="color:var(--pain-fg)">${p.r.mode === 'alt' ? 'variante amable' : 'al 60 %'}</span>` : ''}</p>${p.stalled && !editRoutine ? `<p class="small" style="color:var(--acc-fg);margin:2px 0 0">Estancado · <button class="link small" data-action="unstall" data-ex="${p.ex.id}">bajar 10 % y volver a subir</button></p>` : ''}</div>
         ${editRoutine ? `<div class="tools"><button data-action="routine-move" data-tpl="${tpl}" data-i="${i}" data-d="-1" aria-label="Subir" ${i ? '' : 'disabled'}>↑</button><button data-action="routine-move" data-tpl="${tpl}" data-i="${i}" data-d="1" aria-label="Bajar" ${i < plan.length - 1 ? '' : 'disabled'}>↓</button><button data-action="routine-pick" data-tpl="${tpl}" data-i="${i}" aria-label="Cambiar">⇄</button><button data-action="routine-del" data-tpl="${tpl}" data-i="${i}" aria-label="Quitar">✕</button></div>`
           : `<div class="w">${p.ex.kind === 'peso' ? `<span class="num">${p.w || '—'}</span><div class="small muted">${p.calib ? 'calibrar' : 'kg'}</div>` : ''}</div>`}</div>`).join('');
     h += editRoutine ? `<button class="sec" style="width:100%;margin-top:10px" data-action="routine-pick" data-tpl="${tpl}">+ Agregar ejercicio</button>`
@@ -455,7 +465,7 @@ function showSummary(s) {
     <div class="stats"><div><span class="big num">${s.min}</span><span class="muted small">minutos</span></div><div><span class="big num">${s.sets}</span><span class="muted small">series</span></div><div><span class="big num">${s.vol >= 1000 ? (s.vol / 1000).toFixed(1).replace('.', ',') + 'k' : s.vol}</span><span class="muted small">kg × reps</span></div></div>
     ${st ? `<p class="streak">🔥 ${st} ${st === 1 ? 'semana cumplida' : 'semanas seguidas cumpliendo'}</p>` : ''}
     ${s.prs?.length ? `<h2>Récords</h2>${s.prs.map((p) => `<div class="row"><span>🏆 ${esc(p.name)}</span><b class="num">${esc(p.val)}</b></div>`).join('')}` : ''}
-    ${s.ups?.length ? `<h2>La próxima vez</h2>${s.ups.map((u) => `<div class="row"><span>${esc(u.name)}</span><b class="num" style="color:${u.to > u.from ? 'var(--acc)' : 'var(--pain)'}">${fmtKg(u.from)} → ${fmtKg(u.to)}</b></div>`).join('')}` : '<p class="muted small">Mismo peso la próxima: cuando hagas 12 reps en todas las series, sube.</p>'}
+    ${s.ups?.length ? `<h2>La próxima vez</h2>${s.ups.map((u) => `<div class="row"><span>${esc(u.name)}</span><b class="num" style="color:${u.to > u.from ? 'var(--acc-fg)' : 'var(--pain-fg)'}">${fmtKg(u.from)} → ${fmtKg(u.to)}</b></div>`).join('')}` : '<p class="muted small">Mismo peso la próxima: cuando hagas 12 reps en todas las series, sube.</p>'}
     <p class="muted small" style="margin-top:14px">Próximo: entreno ${S.plan.next}.</p></div>`;
   $('sumsheet').showModal();
 }
@@ -785,6 +795,7 @@ function renderSettings() {
     <span class="small muted">Experiencia</span><div class="chips" style="margin-top:4px">${EXPERIENCE.map((x) => `<button class="chip${p.exp === x.id ? ' on' : ''}" data-action="set-exp" data-v="${x.id}">${x.name}</button>`).join('')}</div>
     <p class="faint small">Con sexo, peso, edad y experiencia estimamos tu peso inicial; la serie de calibración lo ajusta. La altura casi no cambia el cálculo.</p></div>
   <h2>Equipo</h2><div class="card">${equipFields()}</div>
+  <h2>Tema</h2><div class="card"><div class="chips">${[['dark', 'Oscuro'], ['light', 'Claro'], ['system', 'Según el sistema']].map(([k, n]) => `<button class="chip${(S.prefs.theme || 'dark') === k ? ' on' : ''}" data-action="theme" data-v="${k}">${n}</button>`).join('')}</div><p class="faint small">El claro se lee mejor a pleno sol.</p></div>
   <h2>Durante la sesión</h2><div class="card">
     <div class="row"><div><h3>Sonidos</h3><p class="muted small">Pitidos al empezar, en los últimos 3 s y al terminar.</p></div><label class="switch acc"><input type="checkbox" data-action="pref-toggle" data-k="sound" ${S.prefs.sound ? 'checked' : ''} aria-label="Sonidos"><i></i></label></div>
     <div class="row"><div><h3>Voz</h3><p class="muted small">"Sostené", "Descansá", "Siguiente serie".</p></div><label class="switch acc"><input type="checkbox" data-action="pref-toggle" data-k="voice" ${S.prefs.voice ? 'checked' : ''} aria-label="Voz"><i></i></label></div>
@@ -915,7 +926,7 @@ async function importData(file) {
     const j = JSON.parse(await file.text()), d = j.data || j;
     if (!d.profile || !Array.isArray(d.sessions)) throw new Error('no es una copia de Tendón Fuerte');
     if (!confirm(`¿Reemplazar tus datos por la copia (${d.sessions.length} sesiones)?`)) return;
-    S = withDefaults(d); S.onboarded = true; await persist(); render(); toast('Copia restaurada.');
+    S = withDefaults(d); S.onboarded = true; applyTheme(); await persist(); render(); toast('Copia restaurada.');
   } catch (e) { toast('No se pudo leer el archivo: ' + e.message); }
 }
 
@@ -948,6 +959,7 @@ document.addEventListener('click', (e) => {
     'cancel-rehab': () => { if (confirm('¿Salir sin guardar la sesión?')) { clearInterval(R?.timer); R = null; $('rsheet').close(); keepAwake(false); } },
     'pref': () => { S.prefs[d.k] = d.v === undefined ? !S.prefs[d.k] : Number(d.v); persist(); render(); if (d.k === 'sound' || d.k === 'voice') cue('go', 'Así suena'); },
     'news': openNews,
+    'theme': () => { S.prefs.theme = d.v; applyTheme(); persist(); render(); },
     'quick-pain': () => askPain({ id: uid(), date: today(), type: 'dolor', items: [] }, activeZones()),
     'deload': () => { S.plan.deload = weekKey(today()); persist(); render(); toast('Semana de descarga: una serie menos y 90 % del peso. La próxima semana seguís normal.'); },
     'deload-no': () => { S.plan.deloadOffer = weekKey(today()); persist(); render(); },
@@ -1069,6 +1081,7 @@ window.addEventListener('appinstalled', () => { installEvt = null; toast('¡App 
 // ——— Arranque ———
 (async () => {
   try { const d = await db.get('data'); if (d) S = withDefaults(d); } catch (e) { toast('No se pudo abrir la base de datos: ' + e.message); }
+  applyTheme();
   if (!S.onboarded || !S.seenVersion) { S.seenVersion = S.onboarded ? '1.2.0' : APP_VERSION; }   // quien ya usaba la app ve las novedades nuevas
   render();
   if (!S.onboarded) { renderOnb(); $('onb').showModal(); }

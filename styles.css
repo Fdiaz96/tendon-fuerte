@@ -5,6 +5,8 @@
   --bg: #0E0F11; --card: #1A1C20; --card2: #24272C; --line: #2E3238;
   --text: #F2F3F5; --muted: #9AA0A6; --faint: #6B7178;
   --acc: #C6FF00; --acc-ink: #0E0F11; --pain: #FF6B2C; --danger: #FF453A;
+  --acc-fg: #C6FF00; --pain-fg: #FF6B2C; --tabbar: rgba(14, 15, 17, .94);
+  --note-acc-bg: rgba(198, 255, 0, .1); --note-acc-fg: #E4FF99; --note-pain-bg: rgba(255, 107, 44, .14); --note-pain-fg: #FFB08F;
   --r: 16px; --gap: 12px;
   --safe-b: env(safe-area-inset-bottom, 0px); --safe-t: env(safe-area-inset-top, 0px);
   color-scheme: dark;
@@ -19,10 +21,22 @@ h2 { font-size: 20px; margin: 22px 0 8px; text-transform: uppercase; font-weight
 h3 { font-size: 19px; margin: 0; font-weight: 600; }
 p { margin: 6px 0; }
 .muted { color: var(--muted); } .small { font-size: 13px; } .faint { color: var(--faint); }
-a { color: var(--acc); }
+a { color: var(--acc-fg); }
 
 #app { padding: calc(14px + var(--safe-t)) 16px calc(96px + var(--safe-b)); max-width: 640px; margin: 0 auto; }
 .greet { color: var(--muted); font-size: 15px; }
+
+/* Tema claro (Ajustes → Tema). El lima queda para fondos de botón; el texto de acento pasa a verde oscuro. */
+:root[data-theme="light"] {
+  --bg: #F2F3F5; --card: #FFFFFF; --card2: #ECEEF1; --line: #D9DDE3;
+  --text: #15171B; --muted: #5C636D; --faint: #858C96;
+  --acc-fg: #4A7A00; --pain-fg: #C2410C; --danger: #D92D20; --tabbar: rgba(255, 255, 255, .94);
+  --note-acc-bg: #EEF8D6; --note-acc-fg: #3F6600; --note-pain-bg: #FFEDE3; --note-pain-fg: #9A3412;
+  color-scheme: light;
+}
+:root[data-theme="light"] .dots i.on { border-color: #9BCB00; }
+:root[data-theme="light"] .fig { background: #ECEFF3; }
+:root[data-theme="light"] .chart .dot { stroke: var(--card); }
 
 /* Tarjetas */
 .card { background: var(--card); border-radius: var(--r); padding: 16px; margin: 0 0 var(--gap); }
@@ -42,8 +56,8 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 button.cta { display: block; width: 100%; background: var(--acc); color: var(--acc-ink); font-size: 20px; font-weight: 700; text-transform: uppercase; padding: 14px; border-radius: 12px; }
 .pain button.cta, button.cta.pain { background: var(--pain); color: #1a0a00; }
 button.sec { background: var(--card2); padding: 10px 14px; border-radius: 10px; font-weight: 600; }
-button.link { color: var(--acc); font-weight: 600; padding: 6px 2px; }
-.pain button.link { color: var(--pain); }
+button.link { color: var(--acc-fg); font-weight: 600; padding: 6px 2px; }
+.pain button.link { color: var(--pain-fg); }
 button.danger { color: var(--danger); }
 button:disabled { opacity: .4; cursor: default; }
 .btns { display: flex; gap: 8px; flex-wrap: wrap; }
@@ -103,7 +117,7 @@ button.warm-item.on { color: var(--faint); text-decoration: line-through; }
 button.warm-item.on .box { background: var(--acc); border-color: var(--acc); color: var(--acc-ink); }
 
 /* Discos por lado */
-.plates { font-size: 13px; color: var(--acc); margin: 2px 0 0; font-weight: 600; }
+.plates { font-size: 13px; color: var(--acc-fg); margin: 2px 0 0; font-weight: 600; }
 .plate-row { display: grid; grid-template-columns: 1fr 1fr 40px; gap: 8px; align-items: end; }
 .plate-row button { height: 44px; border-radius: 10px; background: var(--card2); color: var(--danger); font-size: 18px; }
 
@@ -117,8 +131,8 @@ button.warm-item.on .box { background: var(--acc); border-color: var(--acc); col
 .set.done .ok { background: var(--acc); color: var(--acc-ink); }
 .set.done input, .set.done select { opacity: .6; }
 .note { font-size: 13px; padding: 8px 10px; border-radius: 10px; background: var(--card2); margin-top: 8px; }
-.note.pain { background: rgba(255, 107, 44, .14); color: #FFB08F; }
-.note.acc { background: rgba(198, 255, 0, .1); color: #E4FF99; }
+.note.pain { background: var(--note-pain-bg); color: var(--note-pain-fg); }
+.note.acc { background: var(--note-acc-bg); color: var(--note-acc-fg); }
 details.cues summary { color: var(--muted); font-size: 14px; cursor: pointer; margin-top: 8px; }
 details.cues ul { margin: 6px 0 0; padding-left: 18px; color: var(--muted); font-size: 14px; }
 
@@ -149,18 +163,18 @@ dialog.full .dlg-head { background: var(--bg); }
 /* Semana y resumen */
 .week { display: flex; gap: 18px; align-items: flex-end; justify-content: space-between; padding: 12px 16px; }
 .week .num { font-size: 22px; font-weight: 700; }
-.week .rehab-n { color: var(--pain); }
+.week .rehab-n { color: var(--pain-fg); }
 .dots { display: flex; gap: 5px; margin-top: 6px; }
 .dots i { width: 18px; height: 18px; border-radius: 50%; background: var(--card2); border: 2px solid var(--line); }
 .dots i.on { background: var(--acc); border-color: var(--acc); }
 .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 8px 0 12px; }
 .stats > div { background: var(--card2); border-radius: 14px; padding: 12px 6px; text-align: center; display: flex; flex-direction: column; gap: 4px; }
-.stats .big { font-size: 36px; color: var(--acc); }
+.stats .big { font-size: 36px; color: var(--acc-fg); }
 .streak { font-family: 'Oswald'; font-size: 18px; text-align: center; margin: 4px 0 8px; }
 #sumsheet .row { display: flex; justify-content: space-between; gap: 10px; padding: 8px 0; border-top: 1px solid var(--line); }
 
 /* Novedades */
-.news h2 { color: var(--acc); margin-top: 18px; }
+.news h2 { color: var(--acc-fg); margin-top: 18px; }
 .news ul { padding-left: 18px; margin: 6px 0; }
 .news li { margin: 6px 0; color: var(--text); }
 .news code { background: var(--card2); padding: 1px 5px; border-radius: 5px; }
@@ -184,18 +198,18 @@ dialog.full .dlg-head { background: var(--bg); }
 .sess .what { font-weight: 600; }
 
 /* Barra de pestañas */
-.tabbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 10; display: flex; background: rgba(14, 15, 17, .94); backdrop-filter: blur(12px); border-top: 1px solid var(--line); padding: 6px 4px calc(6px + var(--safe-b)); }
+.tabbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 10; display: flex; background: var(--tabbar); backdrop-filter: blur(12px); border-top: 1px solid var(--line); padding: 6px 4px calc(6px + var(--safe-b)); }
 .tabbar button { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; color: var(--faint); padding: 4px 0; }
 .tabbar svg { width: 24px; height: 24px; fill: currentColor; }
 .tabbar span { font-size: 11px; text-transform: uppercase; }
-.tabbar button.on { color: var(--acc); }
+.tabbar button.on { color: var(--acc-fg); }
 
 /* Descanso y aviso */
 #rest { position: fixed; z-index: 20; left: 16px; right: 16px; bottom: calc(80px + var(--safe-b)); max-width: 608px; margin: 0 auto; display: flex; align-items: center; gap: 12px; background: var(--acc); color: var(--acc-ink); border-radius: 14px; padding: 10px 16px; font-weight: 600; }
 #rest strong { font-family: 'Oswald'; font-size: 28px; flex: 1; text-align: center; }
 #rest button { background: rgba(0, 0, 0, .15); padding: 8px 12px; border-radius: 10px; font-weight: 700; }
 dialog #rest { bottom: calc(16px + var(--safe-b)); }
-#toast button { float: right; margin: -4px -4px 0 10px; color: var(--acc); font-weight: 700; padding: 4px 6px; }
+#toast button { float: right; margin: -4px -4px 0 10px; color: var(--acc-fg); font-weight: 700; padding: 4px 6px; }
 .thumb[data-action] { cursor: zoom-in; }
 #toast { position: fixed; z-index: 40; left: 16px; right: 16px; top: calc(12px + var(--safe-t)); max-width: 608px; margin: 0 auto; background: var(--card2); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; box-shadow: 0 8px 24px rgba(0, 0, 0, .4); }
 
