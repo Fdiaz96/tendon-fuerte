@@ -175,6 +175,37 @@ const EXERCISES = {
     fig: { a: { ...STAND, W1: [124, 66] }, props: [{ t: 'db', at: 'W1', rot: [90] }] },
   },
 };
+
+// Ejercicios que dependen de equipo extra (banco, barra, bandas). needs = equipo obligatorio.
+Object.assign(EXERCISES, {
+  press_banco: {
+    name: 'Press en banco con mancuernas', kind: 'peso', impl: 'db', needs: ['bench'], ratio: 0.22, tag: ['hombro', 'codo_med'],
+    cues: ['Acostado en el banco, pies firmes en el piso.', 'Bajá las mancuernas al costado del pecho en 2 s, codos a 45°.', 'Empujá sin bloquear de golpe los codos.'],
+    fig: { a: { N: [62, 110], P: [104, 112], E1: [80, 118], W1: [80, 95], K1: [128, 122], F1: [130, 150] }, b: { E1: [68, 88], W1: [66, 64] }, props: [{ t: 'db', at: 'W1' }], scene: [{ t: 'bench', x: 46, y: 118, w: 70 }] },
+  },
+  dominadas: {
+    name: 'Dominadas (agarre neutro)', kind: 'reps', impl: 'bar', alsoRings: true, tag: ['codo_lat', 'codo_med', 'hombro'], alt: 'remo_aros_iso',
+    cues: ['Colgate con las palmas enfrentadas si podés (o en aros).', 'Subí hasta que el mentón pase la barra, bajá en 2–3 s.', 'Si no llegás, hacé solo la bajada lenta (negativas).'],
+    fig: { a: { N: [100, 42], P: [100, 85], E1: [101, 20], W1: [100, -2], K1: [104, 115], F1: [100, 142], T1: [108, 146] }, b: { N: [100, 12], P: [100, 55], E1: [117, 14], W1: [100, -2], K1: [104, 85], F1: [100, 112], T1: [108, 116] }, scene: [{ t: 'bar', y: -2 }], dur: 3.4 },
+  },
+  rot_ext_banda: {
+    name: 'Rotación externa con banda', kind: 'reps', impl: 'band', tag: ['hombro'],
+    cues: ['Codo pegado al cuerpo a 90°, una toalla entre codo y costado ayuda.', 'Llevá la mano hacia afuera sin despegar el codo, volvé en 2–3 s.', 'Ideal como entrada en calor y para hombros sensibles.'],
+    fig: { front: true, a: { N: [100, 45], P: [100, 88], E1: [87, 71], W1: [90, 78], E2: [113, 69], W2: [115, 92], K1: [94, 119], F1: [93, 150], K2: [106, 119], F2: [107, 150] }, b: { W1: [65, 74] }, props: [{ t: 'band', at: 'W1', x: 168, y: 76 }], scene: [{ t: 'post', x: 168 }] },
+  },
+  face_pull: {
+    name: 'Face pull con banda', kind: 'reps', impl: 'band', tag: ['hombro'],
+    cues: ['Banda a la altura de la cara.', 'Tirá hacia la frente separando las manos, codos altos.', 'Apretá atrás 1 s y volvé despacio.'],
+    fig: { a: { ...STAND, E1: [124, 46], W1: [148, 44] }, b: { E1: [104, 38], W1: [124, 30] }, props: [{ t: 'band', at: 'W1', x: 176, y: 40 }], scene: [{ t: 'post', x: 176 }] },
+  },
+});
+// Categorías para elegir reemplazos en el editor de rutina.
+const CATS = { piernas: 'Piernas', empuje: 'Empuje', tiron: 'Tirón', bisagra: 'Cadera', hombro: 'Hombro', brazos: 'Brazos', core: 'Core' };
+Object.entries({
+  goblet: 'piernas', zancada: 'piernas', press_suelo: 'empuje', press_banco: 'empuje', press_hombros: 'empuje', remo_silla: 'tiron', remo_aros: 'tiron',
+  dominadas: 'tiron', rdl: 'bisagra', swing: 'bisagra', puente: 'bisagra', lateral: 'hombro', rot_ext_banda: 'hombro', face_pull: 'hombro',
+  curl_martillo: 'brazos', triceps: 'brazos', plancha: 'core',
+}).forEach(([id, c]) => (EXERCISES[id].cat = c));
 for (const [id, ex] of Object.entries(EXERCISES)) {
   ex.id = id;
   if (typeof ex.fig === 'string') ex.fig = { ...EXERCISES[ex.fig].fig, dur: ex.dur ?? EXERCISES[ex.fig].fig.dur };

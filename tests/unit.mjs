@@ -19,6 +19,18 @@ eq(L('stepUp([2,4,6], 6)'), 6, 'no sube más allá del máximo');
 eq(L('implFor(EXERCISES.goblet, { db: equip.db, kb: [] })'), 'db', 'goblet sin pesa rusa usa mancuerna');
 eq(L('implFor(EXERCISES.remo_aros, { db: null, kb: [] })'), null, 'sin aros no hay remo en aros');
 
+// Equipo extra y máquinas
+ctx.eq2 = { db: equip.db, kb: [], rings: false, bench: false, bar: false, band: true, machines: [{ id: 'p1', name: 'Polea', min: 5, max: 20, step: 2.5 }] };
+eq(L('implFor(EXERCISES.press_banco, eq2)'), null, 'press en banco sin banco → no se puede');
+eq(L('implFor(EXERCISES.press_banco, { ...eq2, bench: true })'), 'db', 'con banco → mancuernas');
+eq(L('implFor(EXERCISES.dominadas, eq2)'), null, 'dominadas sin barra ni aros → no');
+eq(L('implFor(EXERCISES.dominadas, { ...eq2, rings: true })'), 'rings', 'dominadas con aros');
+eq(L('implFor(EXERCISES.face_pull, eq2)'), 'band', 'face pull con banda');
+eq(L('implFor({ impl: "m:p1" }, eq2)'), 'm:p1', 'ejercicio con máquina propia');
+eq(L('implFor({ impl: "m:zz" }, eq2)'), null, 'máquina borrada → falta equipo');
+eq(L('weightSteps(eq2, "m:p1")'), [5, 7.5, 10, 12.5, 15, 17.5, 20], 'pesos de la máquina de a 2,5');
+ok(L('Object.values(EXERCISES).filter((e) => e.cat).every((e) => CATS[e.cat])'), 'cada ejercicio de la biblioteca tiene categoría válida');
+
 // Estimación de peso
 ctx.man = { sex: 'h', weight: 80, age: 30, exp: 'novato' };
 ctx.woman = { sex: 'm', weight: 60, age: 30, exp: 'novato' };

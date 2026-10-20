@@ -142,6 +142,38 @@ await page.locator('#view-history .hit').first().click();
 ok(!(await page.locator('#tip').isHidden()), 'tocar un punto muestra el valor');
 await shot('13-historial');
 
+// 8b. Equipo propio y rutina editable
+await click('[data-tab="settings"]');
+await page.check('#view-settings [data-action="eq-flag"][data-k="bench"]');
+ok((await state()).equip.bench === true, 'marca que tiene banco');
+await click('#view-settings [data-action="mach-edit"]');
+await page.fill('#m-name', 'Polea'); await page.fill('#m-min', '5'); await page.fill('#m-max', '50'); await page.fill('#m-step', '2.5');
+await click('[data-action="mach-save"]');
+s = await state();
+ok(s.equip.machines.length === 1 && s.equip.machines[0].step === 2.5, 'agrega una máquina con su rango de peso');
+await click('[data-tab="train"]');
+await click('[data-action="edit-routine"]');
+await click('#view-train [data-action="routine-pick"][data-tpl="A"][data-i="1"]');
+await page.waitForSelector('#pickersheet[open]');
+ok(!(await page.locator('#pickersheet [data-ex="press_banco"]').isDisabled()), 'con banco, el press en banco se puede elegir');
+ok(!(await page.locator('#pickersheet [data-ex="dominadas"]').isDisabled()), 'con aros, las dominadas se pueden hacer en aros');
+await shot('15-selector');
+await click('#pickersheet [data-ex="press_banco"]');
+ok((await state()).templates.A[1] === 'press_banco', 'cambia el press en el suelo por press en banco');
+await click('#view-train [data-action="routine-pick"][data-tpl="B"]:not([data-i])');
+await click('#pickersheet [data-action="exform"]');
+await page.fill('#x-name', 'Jalón en polea'); await page.selectOption('#x-impl', 'm:' + s.equip.machines[0].id);
+await click('#exformsheet [data-action="xf-tag"][data-v="codo_lat"]');
+await click('[data-action="exform-save"]');
+s = await state();
+ok(s.exlib.length === 1 && s.exlib[0].impl.startsWith('m:') && s.templates.B.at(-1) === s.exlib[0].id, 'crea un ejercicio propio con la máquina y lo suma al día B');
+await click('#view-train [data-action="routine-move"][data-tpl="B"][data-i="6"][data-d="-1"]');
+ok((await state()).templates.B[5] === s.exlib[0].id, 'reordena la rutina');
+await shot('16-editar-rutina');
+await click('[data-action="edit-routine"]');
+const jalon = page.locator('#view-train .ex', { hasText: 'Jalón en polea' });
+ok((await jalon.locator('.num').textContent()).trim() === '5', 'arranca en el mínimo de la máquina (5 kg) para calibrar');
+
 // 9. Calendario y copia
 await click('[data-tab="settings"]');
 await shot('14-ajustes');

@@ -123,6 +123,16 @@ function sceneSVG(s) {
     const back = `<rect x="${bx}" y="${s.y - 42}" width="4" height="44" fill="${PAL.wood2}" stroke="${L}" stroke-width="1.2"/><rect x="${s.back === 'left' ? bx - 1 : bx - 3}" y="${s.y - 42}" width="8" height="16" rx="2" fill="${PAL.wood}" stroke="${L}" stroke-width="1.2"/>`;
     return legs + back + seat;
   }
+  if (s.t === 'bench') {
+    const legs = [s.x + 8, s.x + s.w - 14].map((x) => `<rect x="${x}" y="${s.y + 6}" width="6" height="${144 - s.y}" fill="#9AA3AF" stroke="${L}" stroke-width="1.2"/>`).join('');
+    return `${legs}<rect x="${s.x}" y="${s.y}" width="${s.w}" height="8" rx="3" fill="#2F343C" stroke="${L}" stroke-width="1.4"/>`;
+  }
+  if (s.t === 'bar') return `<rect x="58" y="${s.y - 2}" width="84" height="4" rx="2" fill="#9AA3AF" stroke="${L}" stroke-width="1.2"/><rect x="54" y="-12" width="5" height="162" fill="#C9CED5"/><rect x="141" y="-12" width="5" height="162" fill="#C9CED5"/>`;
+  if (s.t === 'stack') {   // máquina genérica: torre de discos con polea
+    const plates = Array.from({ length: 7 }, (_, i) => `<rect x="${s.x + 4}" y="${108 + i * 6}" width="22" height="5" rx="1" fill="#4B5563" stroke="${L}" stroke-width=".8"/>`).join('');
+    return `<rect x="${s.x}" y="20" width="30" height="130" rx="3" fill="#D1D5DB" stroke="#9CA3AF" stroke-width="1.2"/>${plates}<line x1="${s.x + 15}" y1="28" x2="${s.x + 15}" y2="108" stroke="#6B7280" stroke-width="2"/><circle cx="${s.x + 15}" cy="28" r="5" fill="#9CA3AF" stroke="${L}" stroke-width="1"/>`;
+  }
+  if (s.t === 'post') return `<rect x="${s.x - 3}" y="-12" width="7" height="162" fill="#C9CED5" stroke="#AEB4BC" stroke-width="1"/>`;
   return '';
 }
 
@@ -138,6 +148,10 @@ function propSVG(p, A, B, anim, ease, animate) {
     shape = `<g transform="rotate(${rot[0]})">${spin}<rect x="-9" y="-1.8" width="18" height="3.6" rx="1" fill="${PAL.bar}" stroke="${L}" stroke-width="1.1"/>${plate(-14)}${plate(8)}</g>`;
   }
   if (p.t === 'kb') shape = `<path d="M-5.5 5V-.5a5.5 5.5 0 0111 0V5" fill="none" stroke="${L}" stroke-width="5"/><path d="M-5.5 5V-.5a5.5 5.5 0 0111 0V5" fill="none" stroke="${PAL.kb}" stroke-width="2.6"/><circle cx="0" cy="12" r="9" fill="${PAL.kb}" stroke="${L}" stroke-width="1.4"/><path d="M-4 8a5 5 0 014-2" stroke="#6B7280" stroke-width="1.6" fill="none" stroke-linecap="round"/>`;
+  if (p.t === 'band') {
+    const band = `<line x1="${p.x}" y1="${p.y}" x2="${a[0]}" y2="${a[1]}" stroke="#E5484D" stroke-width="3" stroke-linecap="round">${anim('x2', a[0], b[0])}${anim('y2', a[1], b[1])}</line>`;
+    return `${band}<circle cx="${p.x}" cy="${p.y}" r="3" fill="#E5484D" stroke="${L}" stroke-width="1"/>`;
+  }
   if (p.t === 'ring') {
     const strap = `<line x1="${p.x}" y1="-12" x2="${a[0]}" y2="${a[1] - 5}" stroke="#1F2937" stroke-width="2.2">${anim('x2', a[0], b[0])}${anim('y2', a[1] - 5, b[1] - 5)}</line>`;
     return `${strap}<g transform="translate(${a.join(' ')})">${move}<circle r="5.5" fill="none" stroke="${L}" stroke-width="3.6"/><circle r="5.5" fill="none" stroke="#8B5E3C" stroke-width="2"/></g>`;

@@ -17,17 +17,23 @@ const weekKey = (k) => { const d = parseDay(k); return addDays(k, -((d.getDay() 
 
 // ——— Equipo ———
 // Pesos disponibles para un implemento. db: { min, max, step } (por mancuerna); kb: lista de pesas rusas.
+// Máquinas propias: impl 'm:<id>' con su propio { min, max, step }.
 function weightSteps(equip, impl) {
   if (impl === 'kb') return [...(equip.kb || [])].sort((a, b) => a - b);
-  if (impl !== 'db' || !equip.db) return [];
-  const { min, max, step } = equip.db, out = [];
+  const range = impl === 'db' ? equip.db : impl?.startsWith?.('m:') ? (equip.machines || []).find((m) => 'm:' + m.id === impl) : null;
+  if (!range || !(range.step > 0)) return [];
+  const { min, max, step } = range, out = [];
   for (let w = min; w <= max + 1e-9; w = Math.round((w + step) * 100) / 100) out.push(w);
   return out;
 }
 // Con qué implemento se hace el ejercicio según el equipo, o null si no se puede.
 function implFor(ex, equip) {
+  if ((ex.needs || []).some((n) => !equip[n])) return null;   // p. ej. banco
   if (ex.impl === 'bw') return 'bw';
   if (ex.impl === 'rings') return equip.rings ? 'rings' : null;
+  if (ex.impl === 'bar') return equip.bar ? 'bar' : ex.alsoRings && equip.rings ? 'rings' : null;
+  if (ex.impl === 'band') return equip.band ? 'band' : null;
+  if (ex.impl?.startsWith('m:')) return (equip.machines || []).some((m) => 'm:' + m.id === ex.impl) ? ex.impl : null;
   if (ex.impl === 'kb') return equip.kb?.length ? 'kb' : ex.alsoDb && equip.db ? 'db' : null;
   if (ex.impl === 'db') return equip.db ? 'db' : null;
   return null;
