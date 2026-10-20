@@ -2,6 +2,16 @@
 
 Todos los cambios de Tendón Fuerte, del más nuevo al más viejo.
 
+## 1.13.11 — Sentadilla sumo bien hecha y segunda revisión completa
+
+- **Sentadilla sumo con pesa rusa**: al bajar, los muslos se abrían solo hacia los costados y se acortaban (piernas "de rana"). Ahora la cadera va hacia atrás, las rodillas avanzan sobre los pies, el torso se inclina un poco y los muslos mantienen su largo. Se ve casi de frente para que se note cómo se abren las dos rodillas.
+- Las posturas dibujadas de frente pueden indicar cuánto va cada articulación hacia adelante o hacia atrás, para que el 3D sea fiel.
+- **Músculos secundarios**: solo el músculo principal se asoma por el borde cuando mira para el otro lado; los secundarios (por ejemplo, los glúteos vistos de frente) se ocultan en lugar de aparecer como manchas en punta. Los cuádriceps se marcan en la mitad de abajo del muslo, donde está el grueso del músculo.
+- Un músculo que apunta a la cámara queda como una gota chica, en lugar de desaparecer.
+- **Peso muerto rumano** y **peso muerto a una pierna**: se ven casi de perfil, que es como mejor se entiende la bisagra de cadera; la vista de atrás queda solo para cuando hace falta.
+- **Remo isométrico en aros**: casi de perfil, como el remo invertido (antes el aro quedaba delante de la cara).
+- **Tyler twist con toalla**: casi no se movía. Ahora las dos muñecas giran en sentidos opuestos y se ve cómo se retuerce la toalla.
+
 ## 1.13.10 — Sentadilla sumo de frente
 
 - **Sentadilla sumo con pesa rusa**: se veía de espaldas. Ahora se ve de frente en tres cuartos, con la postura abierta, la pesa rusa entre las piernas y los cuádriceps en rojo.

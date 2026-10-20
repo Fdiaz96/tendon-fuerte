@@ -150,12 +150,12 @@ ok(L('Object.values(EXERCISES).every((e) => !/NaN|undefined/.test(figureSVG(e)) 
 // y el tríceps abajo en los press acostados (el codo apoyado y abierto).
 const MUS_EXC = new Set(['plancha abs', 'flexiones chest', 'press_suelo triceps', 'press_banco triceps']);
 const stats = L(`Object.values(EXERCISES).map((e) => [e.id, muscleStats(e)])`);
-const bad = (fn) => stats.flatMap(([id, st]) => st.muscles.filter((m) => !MUS_EXC.has(id + ' ' + m.m) && m.frames.some((p, i) => p && fn(p, m.frames[i - 1]))).map((m) => id + ' ' + m.m));
-let issues = bad((p) => p.vis < 0.15);
+const bad = (fn, onlyPrimary) => stats.flatMap(([id, st]) => st.muscles.filter((m) => (!onlyPrimary || m.primary) && !MUS_EXC.has(id + ' ' + m.m) && m.frames.some((p, i) => p && fn(p, m.frames[i - 1]))).map((m) => id + ' ' + m.m));
+let issues = bad((p) => p.vis < 0.15, true);
 ok(!issues.length, `el músculo trabajado se ve en todos los fotogramas ${issues.join(', ')}`);
-issues = stats.flatMap(([id, st]) => st.muscles.filter((m) => m.frames.some((p) => p && p.w < 0.2)).map((m) => id + ' ' + m.m));
-ok(!issues.length, `ningún músculo desaparece, ni siquiera los que miran al piso ${issues.join(', ')}`);
-issues = bad((p) => p.w * p.R > 0.32 * p.len || Math.abs(p.o) + p.w > 0.93);
+issues = stats.flatMap(([id, st]) => st.muscles.filter((m) => m.primary && m.frames.some((p) => p && p.w < 0.2)).map((m) => id + ' ' + m.m));
+ok(!issues.length, `el músculo principal nunca desaparece, ni siquiera si mira al piso ${issues.join(', ')}`);
+issues = bad((p) => p.w > Math.max(0.32 * p.len / p.R, 0.31) || Math.abs(p.o) + p.w > 0.93);
 ok(!issues.length, `los músculos no se hinchan ni se salen del contorno ${issues.join(', ')}`);
 issues = bad((p, prev) => prev && prev.w > 0.1 && Math.abs(p.w * p.R - prev.w * prev.R) > 0.3 * prev.w * prev.R + 0.4);
 ok(!issues.length, `el ancho del músculo cambia de a poco entre fotogramas ${issues.join(', ')}`);

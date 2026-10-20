@@ -44,7 +44,7 @@ function pose3D(raw, f) {
   const front = !!f.front, zo = { ...f.z, ...raw.z }, J = {};   // z: por ejercicio o por postura
   const V = (pt, z) => (front ? [0, 150 - pt[1], z] : [pt[0] - 100, 150 - pt[1], z]);
   J.N = V(raw.N, 0); J.P = V(raw.P, 0);
-  if (front) { J.N[2] = 100 - raw.N[0]; J.P[2] = 100 - raw.P[0]; }
+  if (front) { J.N[2] = 100 - raw.N[0]; J.P[2] = 100 - raw.P[0]; J.N[0] = raw.x?.N ?? 0; J.P[0] = raw.x?.P ?? 0; }
   J.up = unit3(sub3(J.N, J.P)); J.fw = [J.up[1], -J.up[0], 0]; J.lat = [0, 0, 1];
   J.H = add3(J.N, scl3(J.up, 13));
   for (const n of ['1', '2']) {
@@ -59,12 +59,14 @@ function pose3D(raw, f) {
       if (front && zo[k] == null) z = Math.max(s * (100 - p[0]), z);
       J[k + n] = V(p, z * s);
     }
-    J['T' + n] ??= add3(J['F' + n], [10, 0, 0]);
     if (front && J['E' + n]) {   // de frente, un brazo que se ve corto va hacia adelante
       const yz = (a, b) => Math.hypot(a[1] - b[1], a[2] - b[2]);
-      J['E' + n][0] = Math.sqrt(Math.max(0, UA ** 2 - yz(J['E' + n], J['S' + n]) ** 2));
+      J['E' + n][0] = J['S' + n][0] + Math.sqrt(Math.max(0, UA ** 2 - yz(J['E' + n], J['S' + n]) ** 2));
       if (J['W' + n]) J['W' + n][0] = J['E' + n][0] + Math.sqrt(Math.max(0, FA ** 2 - yz(J['W' + n], J['E' + n]) ** 2));
     }
+    // De frente se puede indicar cuánto va cada articulación hacia adelante (x): rodillas sobre los pies, cadera atrás.
+    if (front && raw.x) for (const k of ['E', 'W', 'G', 'K', 'F']) if (raw.x[k] != null && J[k + n]) J[k + n][0] = raw.x[k];
+    J['T' + n] ??= add3(J['F' + n], [10, 0, 0]);
   }
   return J;
 }
@@ -161,12 +163,13 @@ function front3(f, key, J, n) {
 const MUS = {
   delt: [['ua', -0.15, 0.42, 0, 110]], biceps: [['ua', 0.3, 0.92, 0, 50]], triceps: [['ua', 0.15, 0.95, 180, 60]],
   forearm: [['fa', 0.05, 0.68, 0, 75]], chest: [['to', 0.08, 0.42, 32, 30], ['to', 0.08, 0.42, -32, 30]], abs: [['to', 0.45, 0.92, 0, 32]],
-  back: [['to', 0.08, 0.6, 180, 70]], lumbar: [['to', 0.6, 0.96, 180, 35]], glutes: [['th', -0.22, 0.3, 180, 75]],
-  quads: [['th', 0.12, 0.9, 0, 70]], hams: [['th', 0.25, 0.92, 180, 60]], calves: [['sh', 0.05, 0.52, 180, 65]],
+  back: [['to', 0.08, 0.6, 180, 70]], lumbar: [['to', 0.6, 0.96, 180, 35]], glutes: [['th', -0.22, 0.3, 180, 50]],
+  quads: [['th', 0.3, 0.94, 0, 70]], hams: [['th', 0.25, 0.92, 180, 60]], calves: [['sh', 0.05, 0.52, 180, 65]],
 };
 // Cómo se ve un parche en una postura: el huso va centrado en o y tiene medio ancho w (fracciones del radio dibujado).
 // Solo cuenta la parte que mira a la cámara; nunca pasa del contorno ni se vuelve más ancho que 0,3 de su largo.
-function patch(f, [key, t0, t1, ang, span], J, n) {
+// primary: el primer músculo del ejercicio. Si mira para el otro lado se asoma por el borde; los demás se ocultan.
+function patch(f, [key, t0, t1, ang, span], J, n, primary = true) {
   const s = segOf(key, J, n); if (!s) return null;
   const p = prj(s[0]), q = prj(s[1]), [ux, uy] = unit(q[0] - p[0], q[1] - p[1]), n2 = [-uy, ux];
   const d = unit3(sub3(s[1], s[0])), f3 = front3(f, key, J, n);
@@ -183,24 +186,25 @@ function patch(f, [key, t0, t1, ang, span], J, n) {
   }
   const len = Math.hypot(q[0] - p[0], q[1] - p[1]) * (t1 - t0);
   // Si mira para el otro lado (p. ej. el abdomen en la plancha), se asoma por el borde más cercano: nunca desaparece.
-  if (lo > hi) { const w = Math.min(0.28, (0.3 * len) / R); return { s2: [p, q, s[2], s[3]], o: Math.sign(peek || 1) * (0.92 - w), w, vis, len, R }; }
+  if (lo > hi) { const w = primary ? Math.min(0.28, (0.3 * len) / R) : 0; return { s2: [p, q, s[2], s[3]], o: Math.sign(peek || 1) * (0.92 - w), w, vis, len, R }; }
   // El ancho crece de a poco a medida que el músculo gira hacia la cámara (sin saltos entre fotogramas).
   const show = Math.min(1, Math.max(0, (vis - 0.15) / 0.75));
-  let o = (lo + hi) / 2, w = 0.28 + Math.max(0, (hi - lo) / 2 - 0.28) * show;
-  w = Math.min(w, (0.3 * len) / R, 0.92);
+  const base = primary ? 0.28 : 0.28 * Math.min(1, Math.max(0, (vis - 0.3) / 0.3));   // los secundarios aparecen de a poco
+  let o = (lo + hi) / 2, w = base + Math.max(0, (hi - lo) / 2 - 0.28) * show;
+  w = Math.min(w, Math.max((0.3 * len) / R, 0.3), 0.92);   // escorzado (apunta a la cámara) queda como una gota chica, no desaparece
   if (Math.abs(o) + w > 0.92) o = Math.sign(o) * (0.92 - w);
   return { s2: [p, q, s[2], s[3]], o, w, vis, len, R };
 }
 // Un músculo a lo largo de la animación: se suaviza el centro y el ancho entre fotogramas vecinos (los extremos quedan igual).
-function patchesOver(f, def, FR, n) {
-  const P = FR.map((J) => patch(f, def, J, n));
+function patchesOver(f, def, FR, n, primary = true) {
+  const P = FR.map((J) => patch(f, def, J, n, primary));
   if (P.length < 3 || P.some((x) => !x)) return P;
   for (let pass = 0; pass < 3; pass++) {
     const prev = P.map((x) => ({ ...x }));
     for (let i = 1; i < P.length - 1; i++) for (const k of ['o', 'w']) P[i][k] = (prev[i - 1][k] + 2 * prev[i][k] + prev[i + 1][k]) / 4;
   }
   for (const x of P) {   // después de suavizar, los mismos topes: no más ancho que 0,3 del largo ni fuera del contorno
-    x.w = Math.min(x.w, (0.3 * x.len) / x.R, 0.92);
+    x.w = Math.min(x.w, Math.max((0.3 * x.len) / x.R, 0.3), 0.92);
     if (Math.abs(x.o) + x.w > 0.92) x.o = Math.sign(x.o) * (0.92 - x.w);
   }
   return P;
@@ -218,7 +222,7 @@ function pickCam(ex, FR) {
   let best = yaws[0], bestScore = -Infinity;
   for (const yaw of yaws) {
     CAM = camera(yaw);
-    let score = yaw === yaws[0] ? 0.6 : 0;
+    let score = (yaw === yaws[0] ? 0.6 : 0) - (yaw <= -40 ? 0.35 : 0);   // de atrás solo si hace mucha falta: de perfil se entiende mejor
     for (const J of FR) {
       for (const def of defs) { const v = patch(ex.fig, def, J, '1')?.vis ?? 1; score += v < 0.15 ? -3 : Math.min(v, 0.8); }
       score += 0.25 * dot3(J.fw, CAM.v);
@@ -236,7 +240,7 @@ function muscleStats(ex) {
   return {
     yaw: CAM.yaw,
     bones: FR.map((J) => ['ua', 'fa', 'th', 'sh'].map((k) => { const s = segOf(k, J, '1'); return s ? Math.hypot(...sub3(s[1], s[0])) : 0; })),
-    muscles: (ex.mus || []).flatMap((m) => (MUS[m] || []).map((def) => ({ m, frames: patchesOver(f, def, FR, '1') }))),
+    muscles: (ex.mus || []).flatMap((m, i) => (MUS[m] || []).map((def) => ({ m, primary: i === 0, frames: patchesOver(f, def, FR, '1', i === 0) }))),
   };
 }
 
@@ -271,8 +275,13 @@ function figureSVG(ex, { animate = true, size = '', crop = false, muscles = true
   // Músculos iluminados: más intensos hacia la postura b (contracción); en los isométricos, un pulso suave. El tamaño no cambia.
   const mus = muscles ? ex.mus || [] : [];
   const glow = !animate ? '' : moving ? animV('opacity', ts.map((t) => r1(0.6 + 0.4 * t))) : '<animate attributeName="opacity" values=".65;1;.65" dur="2.4s" repeatCount="indefinite"/>';
-  const musOn = (keys, n) => mus.flatMap((m) => MUS[m] || []).filter(([k]) => keys.includes(k))
-    .map((def) => { const Ps = patchesOver(f, def, FR, n); return path((J, i) => { const P = Ps[i]; return P ? lens(P.s2, P.o, def[1], def[2], P.w) : ''; },
+  // Un músculo oculto (ancho 0) se reduce a un punto, así no queda dibujado su borde.
+  const musOn = (keys, n) => mus.flatMap((m, j) => (MUS[m] || []).map((def) => [def, j === 0])).filter(([[k]]) => keys.includes(k))
+    .map(([def, primary]) => { const Ps = patchesOver(f, def, FR, n, primary); return path((J, i) => {
+      const P = Ps[i]; if (!P) return '';
+      const k = Math.min(1, P.w / 0.12), tm = (def[1] + def[2]) / 2;
+      return lens(P.s2, P.o, tm + (def[1] - tm) * k, tm + (def[2] - tm) * k, P.w);
+    },
       `fill="${n === '2' ? '#B81D24' : PAL.muscle}" stroke="#9E1219" stroke-width=".7" stroke-linejoin="round" opacity=".9"`, glow); }).join('');
 
   // ——— Partes del cuerpo ———
@@ -467,7 +476,8 @@ function propSVG(p, FR, ts, { path, group, animV, animate, front, dur }) {
   // Punto fijo de la banda: sobre la columna (de perfil, en el centro; de frente, a la altura de la mano en la postura a).
   const M = (x, y) => (front ? [A[p.at][0], 150 - y, 100 - x] : [x - 100, 150 - y, 0]);
   if (p.t === 'towel') {   // toalla enrollada entre las dos manos
-    const ln = (w, extra) => path((J) => `M${pt2(prj(J[p.at]))}L${pt2(prj(J[p.to]))}`, `fill="none" stroke-width="${w}" stroke-linecap="round" ${extra}`);
+    const grip = (J, k) => (J['G' + k.slice(-1)] ? mix3(J[k], J['G' + k.slice(-1)], 0.55) : J[k]);   // con mano articulada, en el puño
+    const ln = (w, extra) => path((J) => `M${pt2(prj(grip(J, p.at)))}L${pt2(prj(grip(J, p.to)))}`, `fill="none" stroke-width="${w}" stroke-linecap="round" ${extra}`);
     return { under: ln(9, `stroke="${L}"`) + ln(6.4, 'stroke="#7FB3D5"') + ln(6.4, 'stroke="#5E97BF" stroke-dasharray="2 3"'), over: '' };
   }
   if (p.t === 'band') {

@@ -262,8 +262,9 @@ Object.assign(EXERCISES, {
     cues: ['Pies más abiertos que los hombros, puntas hacia afuera.', 'La pesa cuelga entre las piernas con los brazos estirados.', 'Bajá con el pecho alto y las rodillas siguiendo a los pies.'],
     fig: {
       front: true,
-      a: { N: [100, 45], P: [100, 88], E1: [94, 68], W1: [100, 92], E2: [106, 68], W2: [100, 92], K1: [86, 119], F1: [78, 150], K2: [114, 119], F2: [122, 150] },
-      b: { N: [100, 70], P: [100, 112], E1: [94, 93], W1: [100, 117], E2: [106, 93], W2: [100, 117], K1: [74, 122], F1: [78, 150], K2: [126, 122], F2: [122, 150] },
+      // x: cuánto va hacia adelante cada articulación (de frente no se ve): abajo, cadera atrás y rodillas sobre los pies.
+      a: { N: [100, 45], P: [100, 88], E1: [94, 68], W1: [100, 92], E2: [106, 68], W2: [100, 92], K1: [86, 119], F1: [78, 150], K2: [114, 119], F2: [122, 150], x: { K: 3 } },
+      b: { N: [100, 72], P: [100, 110], E1: [94, 93], W1: [100, 116], E2: [106, 93], W2: [100, 116], K1: [74, 122], F1: [78, 150], K2: [126, 122], F2: [122, 150], x: { N: 5, P: -9, K: 13, E: 7, W: 7 } },
       props: [{ t: 'kb', at: 'W1' }],
     },
   },
@@ -303,7 +304,8 @@ Object.assign(EXERCISES, {
   tyler_toalla: {
     name: 'Tyler twist con toalla', kind: 'lento', impl: 'bw', zone: 'codo_lat',
     cues: ['Toalla enrollada con las dos manos, brazos adelante.', 'Retorcé la toalla con la mano sana y dejá que la del codo afectado ceda despacio (4 s).', 'Sin Flexbar: la toalla bien enrollada funciona parecido.'],
-    fig: { front: true, a: { N: [100, 45], P: [100, 88], E1: [86, 74], W1: [80, 88], E2: [114, 74], W2: [120, 88], K1: [94, 119], F1: [93, 150], K2: [106, 119], F2: [107, 150] }, b: { W1: [81, 84], W2: [119, 92] }, props: [{ t: 'towel', at: 'W1', to: 'W2' }], dur: 5 },
+    // Las muñecas giran en sentidos opuestos retorciendo la toalla (la del codo dolorido termina flexionada, en excéntrico).
+    fig: { front: true, a: { N: [100, 45], P: [100, 88], E1: [86, 74], W1: [80, 88], G1: [80, 82], E2: [114, 74], W2: [120, 88], G2: [120, 94], K1: [94, 119], F1: [93, 150], K2: [106, 119], F2: [107, 150], x: { W: 17, G: 24 } }, b: { G1: [80, 94], G2: [120, 82] }, props: [{ t: 'towel', at: 'W1', to: 'W2' }], dur: 5 },
   },
 });
 const REHAB_OPTIONS = {
@@ -355,8 +357,9 @@ Object.entries({
   goblet: { E: 10, W: 4 }, goblet_lenta: { E: 10, W: 4 }, sumo_kb: { E: 9, W: 3 }, swing: { E: 9, W: 3 }, triceps: { E: 9, W: 3 },
   pullover: { E: 10, W: 3 }, puente: { W: 9 }, hip_thrust: { W: 9 },
 }).forEach(([id, z]) => (EXERCISES[id].fig = { ...EXERCISES[id].fig, z }));
-// Cámara a mano donde el ángulo automático no muestra bien el ejercicio: dominadas, tres cuartos de atrás.
-Object.entries({ dominadas: -65 }).forEach(([id, cam]) => (EXERCISES[id].fig = { ...EXERCISES[id].fig, cam }));
+// Cámara a mano donde el ángulo automático no muestra bien el ejercicio: dominadas (tres cuartos de atrás), sumo (casi de frente,
+// para ver las dos rodillas abrirse) y peso muerto rumano (casi de perfil, para ver la bisagra de cadera).
+Object.entries({ dominadas: -65, sumo_kb: 80, rdl: -15, remo_aros_iso: -15 }).forEach(([id, cam]) => (EXERCISES[id].fig = { ...EXERCISES[id].fig, cam }));
 
 
 // Cuerpo completo A/B (6 ejercicios por día). Sin banco: press en el suelo y remo apoyado en silla.
