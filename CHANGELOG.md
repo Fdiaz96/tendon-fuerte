@@ -2,6 +2,12 @@
 
 Todos los cambios de Tendón Fuerte, del más nuevo al más viejo.
 
+## 1.11.1 — Cara con expresión: se ve hacia dónde mira
+
+- **De perfil**: nariz que sobresale del contorno, ojo, ceja, boca y oreja. Así se ve hacia dónde mira aunque esté acostado, inclinado o boca abajo.
+- **De frente**: ojos, cejas, nariz y una sonrisa.
+- Los rasgos acompañan la animación de la cabeza.
+
 ## 1.11.0 — Ilustraciones más limpias y músculo en rojo
 
 - **Contornos limpios**: cada brazo, pierna, torso y cabeza se dibuja como una sola silueta, sin las líneas que se cruzaban en codos, rodillas, mangas y short.

@@ -126,12 +126,23 @@ function figureSVG(ex, { animate = true, size = '', crop = false, muscles = true
     : (p) => capsule(mix(p.N, p.P, -0.06), mix(p.N, p.P, 0.86), 11.5, 10);
   const upOf = (p) => unit(p.N[0] - p.P[0], p.N[1] - p.P[1]), fwOf = (p) => { const u = upOf(p); return [-u[1], u[0]]; };
   const at = (fn) => { const a = fn(A), b = fn(B || A); return (attrs) => `<circle cx="${r1(a[0])}" cy="${r1(a[1])}" ${attrs}>${anim('cx', r1(a[0]), r1(b[0]))}${anim('cy', r1(a[1]), r1(b[1]))}</circle>`; };
-  const ears = front ? [-1, 1].map((k) => [(p) => circlePath([headOf(p)[0] + k * 10.4, headOf(p)[1] + 1.5], 2.6), PAL.skin]) : [];
+  // Cara: puntos relativos al centro de la cabeza, en ejes hacia adelante (de frente: hacia la derecha) y hacia arriba.
+  const fp = (p, a, b) => { const c = headOf(p), u = upOf(p), fw = fwOf(p); return [c[0] + fw[0] * a + u[0] * b, c[1] + fw[1] * a + u[1] * b]; };
+  const pt = (q) => `${r1(q[0])} ${r1(q[1])}`;
+  const stroke = (d, w) => path(d, `fill="none" stroke="${L}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round"`);
+  const ears = front ? [-1, 1].map((k) => [(p) => circlePath(fp(p, k * 10.4, -1.5), 2.6), PAL.skin]) : [];
+  const nose = front ? [] : [[(p) => circlePath(fp(p, 9.7, -0.6), 2.3), PAL.skin]];
   const face = front
-    ? [-3.6, 3.6].map((dx) => at((p) => [headOf(p)[0] + dx, headOf(p)[1] + 1.5])(`r="1.3" fill="${L}"`)).join('')
-    : at((p) => { const c = headOf(p), u = upOf(p), fw = fwOf(p); return [c[0] + fw[0] * 6 + u[0] * 1.5, c[1] + fw[1] * 6 + u[1] * 1.5]; })(`r="1.3" fill="${L}"`);
+    ? [-1, 1].map((k) => at((p) => fp(p, k * 3.8, -0.8))(`r="1.4" fill="${L}"`)
+        + stroke((p) => `M${pt(fp(p, k * 2.1, 3))}L${pt(fp(p, k * 5.6, 3.5))}`, 1.3)).join('')
+      + stroke((p) => `M${pt(fp(p, -0.8, -3.2))}Q${pt(fp(p, 0, -3.9))} ${pt(fp(p, 0.8, -3.2))}`, 1)
+      + stroke((p) => `M${pt(fp(p, -2.6, -5.4))}Q${pt(fp(p, 0, -7.2))} ${pt(fp(p, 2.6, -5.4))}`, 1.2)
+    : path((p) => `M${pt(fp(p, -1.2, 2.4))}C${pt(fp(p, -4.6, 2.8))} ${pt(fp(p, -4.6, -2.8))} ${pt(fp(p, -1.2, -2.4))}`, `fill="${PAL.skin2}" stroke="${L}" stroke-width="1.1" stroke-linecap="round"`)
+      + at((p) => fp(p, 5.4, 1.6))(`r="1.45" fill="${L}"`)
+      + stroke((p) => `M${pt(fp(p, 3.4, 4.6))}L${pt(fp(p, 7.6, 4.3))}`, 1.3)
+      + stroke((p) => `M${pt(fp(p, 5.6, -4.6))}Q${pt(fp(p, 7.2, -5.4))} ${pt(fp(p, 8.6, -4.2))}`, 1.1);
   const head = group([
-    [(p) => capsule(p.N, mix(p.N, headOf(p), 0.55), 3.6, 3.6), PAL.skin], ...ears,
+    [(p) => capsule(p.N, mix(p.N, headOf(p), 0.55), 3.6, 3.6), PAL.skin], ...ears, ...nose,
     [(p) => circlePath(headOf(p), 10.6), PAL.skin], [(p) => hairPath(headOf(p), upOf(p), front), PAL.hair],
   ], face);
 
