@@ -104,8 +104,9 @@ function poseAt(A, B, t) {
 const FRAMES = 6, easeT = (t) => 0.5 - Math.cos(Math.PI * t) / 2;
 function framesOf(f) {
   const A = pose3D(f.a, f), B = f.b ? pose3D({ ...f.a, ...f.b }, f) : null;
-  if (!B) return { FR: [A], ts: [0], A, B };
   const ts = Array.from({ length: FRAMES + 1 }, (_, i) => easeT(i / FRAMES));
+  if (!B && f.roll) return { FR: ts.map((t) => ({ ...A, roll: f.roll[0] + (f.roll[1] - f.roll[0]) * t })), ts, A, B };   // solo gira la mano
+  if (!B) return { FR: [A], ts: [0], A, B };
   return { FR: ts.map((t) => poseAt(A, B, t)), ts, A, B };
 }
 
@@ -243,7 +244,7 @@ function muscleStats(ex) {
 function figureSVG(ex, { animate = true, size = '', crop = false, muscles = true, at = null } = {}) {
   const f = ex.fig, L = PAL.line, fr = framesOf(f);
   CAM = camera(pickCam(ex, fr.FR));
-  const FR = at == null ? fr.FR : [poseAt(fr.A, fr.B, at)], ts = at == null ? fr.ts : [at], A = FR[0], moving = FR.length > 1;
+  const FR = at == null ? fr.FR : [f.roll && !fr.B ? { ...fr.A, roll: f.roll[0] + (f.roll[1] - f.roll[0]) * at } : poseAt(fr.A, fr.B, at)], ts = at == null ? fr.ts : [at], A = FR[0], moving = FR.length > 1;
   const dur = `${f.dur || 3}s`;
   // Animación por fotogramas: ida por las 7 posturas y vuelta, a intervalos iguales (la suavidad ya está en las posturas).
   const loop = (vals) => [...vals, ...vals.slice(0, -1).reverse()];
@@ -319,7 +320,7 @@ function figureSVG(ex, { animate = true, size = '', crop = false, muscles = true
     const mirrored = f.a.W2 === undefined && !f.front && !f.z?.W && !f.one;
     if (p.at === 'W1' && mirrored && ['db', 'ring', 'band'].includes(p.t)) props.push({ ...p, at: 'W2' });
   }
-  const propsOf = (n) => props.filter((p) => p.at.slice(-1) === n).map((p) => propSVG(p, FR, ts, { path, group, animV, animate, front: !!f.front }));
+  const propsOf = (n) => props.filter((p) => p.at.slice(-1) === n).map((p) => propSVG(p, FR, ts, { path, group, animV, animate, front: !!f.front, dur }));
   const arm = (n) => {
     const ps = propsOf(n).filter((p) => !p.own);
     return group(armParts(n), musOn(['ua', 'fa'], n)) + ps.map((p) => p.under).join('') + hand(n) + ps.map((p) => p.over).join('');
@@ -334,7 +335,7 @@ function figureSVG(ex, { animate = true, size = '', crop = false, muscles = true
     // La pesa rusa se ordena sola por su profundidad (la campana cuelga debajo del mango): de atrás queda tapada por el cuerpo.
     ...props.filter((p) => p.t === 'kb').map((p) => {
       const n = p.at.slice(-1), c = (J) => { const w = p.mid ? mix3(J.W1, J.W2, 0.5) : J[p.at]; return [w[0], w[1] - 12, w[2]]; };
-      return { z: zOf((J) => depth(c(J))) - 1, svg: propSVG(p, FR, ts, { path, group, animV, animate, front: !!f.front }).under };
+      return { z: zOf((J) => depth(c(J))) - 1, svg: propSVG(p, FR, ts, { path, group, animV, animate, front: !!f.front, dur }).under };
     }),
     ...['1', '2'].flatMap((n) => [
       { z: zOf(avgD(['S' + n, 'E' + n, 'W' + n])) + 2, svg: arm(n) },
@@ -422,10 +423,13 @@ function handleDir(grip, J, n, front) {
   if (grip === 'end') return front ? [1, 0, 0] : [0, 0, 1];   // de punta: hacia quien mira en el dibujo original
   const d = J['G' + n] ? unit3(sub3(J['G' + n], J['W' + n])) : unit3(sub3(J['W' + n], J['E' + n]));
   if (grip === 'along') return d;
-  const a = [-d[1], d[0], 0];
-  return front || Math.hypot(...a) < 1e-3 ? [1, 0, 0] : unit3(a);
+  const a = [-d[1], d[0], 0], neutral = front || Math.hypot(...a) < 1e-3 ? [1, 0, 0] : unit3(a);
+  if (grip !== 'roll') return neutral;
+  // Pronación y supinación: el mango gira alrededor del antebrazo, de neutro (0°) hacia los costados (±90°).
+  const g = ((J.roll || 0) * Math.PI) / 180, side = unit3(cross3(d, neutral));
+  return add3(scl3(neutral, Math.cos(g)), scl3(side, Math.sin(g)));
 }
-function propSVG(p, FR, ts, { path, group, animV, animate, front }) {
+function propSVG(p, FR, ts, { path, group, animV, animate, front, dur }) {
   const L = PAL.line, n = p.at.slice(-1), A = FR[0];
   const posOf = (J) => (p.mid ? mix3(J.W1, J.W2, 0.5) : (p.at[0] === 'W' && J['G' + n] && mix3(J['W' + n], J['G' + n], 0.55)) || J[p.at]);   // con mano articulada, la pesa va en la mano
   if (p.t === 'db') {
@@ -438,8 +442,13 @@ function propSVG(p, FR, ts, { path, group, animV, animate, front }) {
           path((J) => { const [c, a, b] = geo(J)[1]; return ellipse(c, scl3([...a, 0], 0.3).slice(0, 2), scl3([...b, 0], 0.3).slice(0, 2)); }, `fill="${PAL.bar}" stroke="${L}" stroke-width="1"`));
       };
       const bar = path((J) => { const h = handleDir(grip, J, n, front), w = posOf(J); return capsule(prj(add3(w, scl3(h, -9))), prj(add3(w, scl3(h, 9))), 1.9, 1.9); }, `fill="${PAL.bar}" stroke="${L}" stroke-width="1.2"`);
-      const nearSign = dot3(handleDir(grip, A, n, front), CAM.v) >= 0 ? 1 : -1;
-      return { under: `<g${extra}>${plate(-nearSign)}${bar}</g>`, over: `<g${extra}>${plate(nearSign)}</g>` };
+      // Qué disco queda adelante; si cambia durante el giro, se alternan dos versiones (una visible por vez).
+      const signs = FR.map((J) => (dot3(handleDir(grip, J, n, front), CAM.v) >= 0 ? 1 : -1));
+      if (signs.every((x) => x === signs[0]) || !animate) return { under: `<g${extra}>${plate(-signs[0])}${bar}</g>`, over: `<g${extra}>${plate(signs[0])}</g>` };
+      const loopS = [...signs, ...signs.slice(0, -1).reverse()];
+      const show = (sg) => `<animate attributeName="opacity" calcMode="discrete" values="${loopS.map((x) => (x === sg ? 1 : 0)).join(';')}" dur="${dur}" repeatCount="indefinite"/>`;
+      const both = (layer) => [1, -1].map((sg) => `<g opacity="${signs[0] === sg ? 1 : 0}">${show(sg)}${layer(sg)}</g>`).join('');
+      return { under: both((sg) => plate(-sg) + bar), over: both((sg) => plate(sg)) };
     };
     if (Array.isArray(p.grip)) {
       // Cambio de agarre: una vista se desvanece mientras aparece la otra (en los isométricos, un ida y vuelta de 6 s).

@@ -173,6 +173,7 @@ const disl = L(`Object.values(EXERCISES).filter((e) => !e.fig.front).flatMap((e)
 ok(!disl.length, `ningún codo ni rodilla se dobla al revés ${[...new Set(disl)].join(', ')}`);
 ok(L('framesOf(EXERCISES.remo_aros.fig).FR.every((J) => J.fw[1] > 0)'), 'en el remo invertido el personaje está boca arriba');
 ok(L('framesOf(EXERCISES.ext_muneca_lenta.fig).FR.every((J, i, all) => Math.abs(J.W1[1] - all[0].W1[1]) < 0.5)'), 'en la extensión de muñeca se mueve la mano y el antebrazo queda apoyado');
+ok(L(`framesOf(EXERCISES.prono_lenta.fig).FR.length > 1 && !figureSVG(EXERCISES.prono_lenta).includes('values="1;0;1')`), 'en la pronación y supinación la mancuerna gira (no aparece y desaparece)');
 ok(Object.values(L('REHAB')).every((p) => L(`EXERCISES['${p[1]}'] && EXERCISES['${p[2]}']`)), 'cada zona tiene ejercicios de fase 1 y 2');
 ok(L('Object.values(REHAB_OPTIONS).every((z) => [1, 2].every((f) => z[f].length && z[f].every((id) => EXERCISES[id] && EXERCISES[id].zone !== undefined || EXERCISES[id].tag)))'), 'las opciones de rehabilitación existen');
 ok(L('Object.entries(REHAB).every(([z, p]) => REHAB_OPTIONS[z][1][0] === p[1] && REHAB_OPTIONS[z][2][0] === p[2])'), 'la primera opción de cada fase es la del protocolo base');

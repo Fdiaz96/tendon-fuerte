@@ -6,6 +6,10 @@ Todos los cambios de Tendón Fuerte, del más nuevo al más viejo.
 
 - Las 49 animaciones quedaron revisadas y aprobadas: se borró la página temporal `animaciones.html`.
 
+## 1.13.6 — Pronación y supinación con giro real
+
+- En **Pronación y supinación lenta** la mancuerna ya no aparece y desaparece: gira alrededor del antebrazo, de palma abajo a palma arriba, pasando por la posición vertical, y vuelve. El disco que queda adelante cambia en el momento justo del giro.
+
 ## 1.13.5 — Ningún músculo desaparece
 
 - Cuando el músculo trabajado mira para el lado contrario a la cámara (el abdomen en la plancha o el pecho en las flexiones, que miran al piso), el rojo se asoma por el borde del cuerpo más cercano en lugar de desaparecer.
