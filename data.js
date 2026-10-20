@@ -349,7 +349,7 @@ Object.entries({
   along: ['triceps', 'pullover'],
 }).forEach(([g, ids]) => ids.forEach((id) => EXERCISES[id].fig.props.forEach((p) => p.t === 'db' && (p.grip = g))));
 EXERCISES.prono_lenta.fig.props[0].grip = 'roll';
-EXERCISES.prono_lenta.fig.roll = [-85, 85];   // de palma abajo a palma arriba, girando el antebrazo
+EXERCISES.prono_lenta.fig.roll = [-45, 45];   // 90° en total: 45° hacia palma abajo y 45° hacia palma arriba desde la posición vertical
 // Manos juntas (una sola pesa con las dos manos) o apoyadas en la cadera: distancia de codos y manos al centro del cuerpo.
 Object.entries({
   goblet: { E: 10, W: 4 }, goblet_lenta: { E: 10, W: 4 }, sumo_kb: { E: 9, W: 3 }, swing: { E: 9, W: 3 }, triceps: { E: 9, W: 3 },

@@ -2,6 +2,10 @@
 
 Todos los cambios de Tendón Fuerte, del más nuevo al más viejo.
 
+## 1.13.8 — Giro de 90° en la pronación y supinación
+
+- En **Pronación y supinación lenta** el giro es ahora de 90° en total (45° hacia cada lado desde la mancuerna vertical), en lugar de casi 180°.
+
 ## 1.13.7 — Vuelve la página de prueba de animaciones
 
 - Se restauró la página temporal `animaciones.html` (se había borrado en la 1.13.6 antes de terminar la revisión) para seguir revisando las animaciones.
