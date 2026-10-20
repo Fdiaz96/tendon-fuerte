@@ -2,6 +2,10 @@
 
 Todos los cambios de Tendón Fuerte, del más nuevo al más viejo.
 
+## 1.13.10 — Sentadilla sumo de frente
+
+- **Sentadilla sumo con pesa rusa**: se veía de espaldas. Ahora se ve de frente en tres cuartos, con la postura abierta, la pesa rusa entre las piernas y los cuádriceps en rojo.
+
 ## 1.13.9 — Bandas atadas, empuje visible, pie corregido y press de pecho
 
 - **Rotación externa con banda** y **Face pull**: las bandas estaban sueltas en el aire. Ahora salen de la columna (en el face pull, las dos del mismo punto).
