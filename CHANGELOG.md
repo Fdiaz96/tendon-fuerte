@@ -2,6 +2,10 @@
 
 Todos los cambios de Tendón Fuerte, del más nuevo al más viejo.
 
+## 1.13.1 — Página de prueba de animaciones (temporal)
+
+- Página `animaciones.html` con los 49 ejercicios animados a la vez, con su nombre, el ángulo de cámara y los músculos que trabajan. Sirve para revisar las animaciones y se va a borrar cuando terminemos de ajustarlas.
+
 ## 1.13.0 — Músculos con proporciones correctas en todo el movimiento
 
 - **Animación por ángulos**: entre la postura inicial y la final se calculan 7 posturas intermedias girando cada articulación. Brazos y piernas ya no se acortan a mitad del movimiento (antes pasaba en el curl, el press o el swing) y el músculo no se achica ni se deforma.
