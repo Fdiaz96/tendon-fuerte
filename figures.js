@@ -28,7 +28,8 @@ const r1 = (n) => Math.round(n * 10) / 10;
 const pt2 = (q) => `${r1(q[0])} ${r1(q[1])}`;
 // Cámara elevada 28° y girada alrededor del personaje: 0° = de perfil por su derecha, 40° = tres cuartos de frente
 // (la habitual), negativos = tres cuartos de atrás. Es una variable de módulo: cada dibujo fija la suya (todo es sincrónico).
-function camera(yaw, pitch = 28) {
+function camera(yaw, pitch) {
+  pitch ??= 28;   // un ejercicio puede pedir mirar más desde arriba (fig.pitch)
   const a = (yaw * Math.PI) / 180, b = (pitch * Math.PI) / 180;
   return { yaw, r: [Math.cos(a), 0, -Math.sin(a)], u: [-Math.sin(a) * Math.sin(b), Math.cos(b), -Math.cos(a) * Math.sin(b)], v: [Math.sin(a) * Math.cos(b), Math.sin(b), Math.cos(a) * Math.cos(b)] };
 }
@@ -65,7 +66,7 @@ function pose3D(raw, f) {
       if (J['W' + n]) J['W' + n][0] = J['E' + n][0] + Math.sqrt(Math.max(0, FA ** 2 - yz(J['W' + n], J['E' + n]) ** 2));
     }
     // De frente se puede indicar cuánto va cada articulación hacia adelante (x): rodillas sobre los pies, cadera atrás.
-    if (front && raw.x) for (const k of ['E', 'W', 'G', 'K', 'F']) if (raw.x[k] != null && J[k + n]) J[k + n][0] = raw.x[k];
+    if (front && raw.x) for (const k of ['E', 'W', 'G', 'K', 'F', 'T']) if (raw.x[k] != null && J[k + n]) J[k + n][0] = raw.x[k];
     J['T' + n] ??= add3(J['F' + n], [10, 0, 0]);
   }
   return J;
@@ -152,10 +153,20 @@ function segOf(key, J, n) {
   return [a, b, halfWidth(J, 12.5, 8.5, m), halfWidth(J, 11, 7.5, m)];
 }
 // Hacia dónde mira la cara anterior del segmento (pecho, bíceps, cuádriceps).
+// Si la articulación está doblada se usa hacia dónde se dobla (el codo se cierra hacia adelante del brazo; la rodilla,
+// hacia atrás del muslo y de la pierna), que vale en cualquier postura; si está recta, la orientación del cuerpo.
 function front3(f, key, J, n) {
-  if (key === 'to' || f.front) return J.fw;
-  const s = segOf(key, J, n), d = sub3(s[1], s[0]), a = [-d[1], d[0], 0];
-  return Math.hypot(...a) < 1e-3 ? J.fw : unit3(a);
+  if (key === 'to') return J.fw;
+  const s = segOf(key, J, n), d = unit3(sub3(s[1], s[0]));
+  let base = f.front ? J.fw : [-d[1], d[0], 0];
+  if (Math.hypot(...base) < 1e-3) base = J.fw;
+  base = sub3(base, scl3(d, dot3(base, d)));
+  const other = { ua: ['W', 'E', 1], th: ['F', 'K', -1], sh: ['Hp', 'K', -1] }[key];
+  if (other && J[other[0] + n]) {
+    const v = sub3(J[other[0] + n], J[other[1] + n]), perp = sub3(v, scl3(d, dot3(v, d))), k = Math.min(1, Math.hypot(...perp) / (0.45 * Math.hypot(...v)));
+    if (k > 0) base = add3(scl3(unit3(base), 1 - k), scl3(unit3(perp), other[2] * k));
+  }
+  return unit3(base);
 }
 
 // Músculos como parches sobre la superficie: [segmento, t0, t1 (a lo largo del hueso), ángulo alrededor del hueso
@@ -163,13 +174,17 @@ function front3(f, key, J, n) {
 const MUS = {
   delt: [['ua', -0.15, 0.42, 0, 110]], biceps: [['ua', 0.3, 0.92, 0, 50]], triceps: [['ua', 0.15, 0.95, 180, 60]],
   forearm: [['fa', 0.05, 0.68, 0, 75]], chest: [['to', 0.08, 0.42, 32, 30], ['to', 0.08, 0.42, -32, 30]], abs: [['to', 0.45, 0.92, 0, 32]],
-  back: [['to', 0.08, 0.6, 180, 70]], lumbar: [['to', 0.6, 0.96, 180, 35]], glutes: [['th', -0.22, 0.3, 180, 50]],
-  quads: [['th', 0.3, 0.94, 0, 70]], hams: [['th', 0.25, 0.92, 180, 60]], calves: [['sh', 0.05, 0.52, 180, 65]],
+  back: [['to', 0.08, 0.6, 180, 70]], lumbar: [['to', 0.6, 0.96, 180, 35]], glutes: [['th', -0.25, 0.3, [120, -120], 40]],
+  quads: [['th', 0.36, 0.95, 0, 70]], hams: [['th', 0.25, 0.92, 180, 60]], calves: [['sh', 0.05, 0.52, 180, 65]],
 };
 // Cómo se ve un parche en una postura: el huso va centrado en o y tiene medio ancho w (fracciones del radio dibujado).
 // Solo cuenta la parte que mira a la cámara; nunca pasa del contorno ni se vuelve más ancho que 0,3 de su largo.
 // primary: el primer músculo del ejercicio. Si mira para el otro lado se asoma por el borde; los demás se ocultan.
 function patch(f, [key, t0, t1, ang, span], J, n, primary = true) {
+  if (Array.isArray(ang)) {   // posterolateral (glúteos): se usa el lado que mira a la cámara
+    const [p1, p2] = ang.map((g) => patch(f, [key, t0, t1, g, span], J, n, primary));
+    return !p1 || (p2 && p2.vis > p1.vis) ? p2 : p1;
+  }
   const s = segOf(key, J, n); if (!s) return null;
   const p = prj(s[0]), q = prj(s[1]), [ux, uy] = unit(q[0] - p[0], q[1] - p[1]), n2 = [-uy, ux];
   const d = unit3(sub3(s[1], s[0])), f3 = front3(f, key, J, n);
@@ -211,7 +226,7 @@ function patchesOver(f, def, FR, n, primary = true) {
 }
 // Ángulo de cámara para un ejercicio: el que mejor muestra sus músculos (lado cercano) en todos los fotogramas,
 // sin perder del todo la cara. Se prefiere el habitual (40°) si no hay motivo para girar.
-const CAM_YAWS = [40, 15, -15, -40, -65], CAM_YAWS_FRONT = [65, 80, 50];   // los dibujados de frente, más de frente
+const CAM_YAWS = [40, 15, -15], CAM_YAWS_FRONT = [65, 80, 50];   // automático: de frente a perfil; de atrás, solo a mano (fig.cam)   // los dibujados de frente, más de frente
 const camCache = new Map();
 function pickCam(ex, FR) {
   if (ex.fig.cam != null) return ex.fig.cam;
@@ -236,7 +251,7 @@ function pickCam(ex, FR) {
 // Diagnóstico para los tests: cómo queda cada músculo en cada fotograma.
 function muscleStats(ex) {
   const f = ex.fig, { FR } = framesOf(f);
-  CAM = camera(pickCam(ex, FR));
+  CAM = camera(pickCam(ex, FR), ex.fig.pitch);
   return {
     yaw: CAM.yaw,
     bones: FR.map((J) => ['ua', 'fa', 'th', 'sh'].map((k) => { const s = segOf(k, J, '1'); return s ? Math.hypot(...sub3(s[1], s[0])) : 0; })),
@@ -247,7 +262,7 @@ function muscleStats(ex) {
 // at: dibuja quieta la postura intermedia t (0 = a, 1 = b), para revisar el movimiento.
 function figureSVG(ex, { animate = true, size = '', crop = false, muscles = true, at = null } = {}) {
   const f = ex.fig, L = PAL.line, fr = framesOf(f);
-  CAM = camera(pickCam(ex, fr.FR));
+  CAM = camera(pickCam(ex, fr.FR), ex.fig.pitch);
   const FR = at == null ? fr.FR : [f.roll && !fr.B ? { ...fr.A, roll: f.roll[0] + (f.roll[1] - f.roll[0]) * at } : poseAt(fr.A, fr.B, at)], ts = at == null ? fr.ts : [at], A = FR[0], moving = FR.length > 1;
   const dur = `${f.dur || 3}s`;
   // Animación por fotogramas: ida por las 7 posturas y vuelta, a intervalos iguales (la suavidad ya está en las posturas).
@@ -286,7 +301,7 @@ function figureSVG(ex, { animate = true, size = '', crop = false, muscles = true
 
   // ——— Partes del cuerpo ———
   const legParts = (n) => [
-    [seg('th', n), shade(n, 'skin')], [seg('sh', n), shade(n, 'skin')], [seg('th', n, 0, 0.6, 8.8, 7.2), shade(n, 'shorts')],
+    [seg('th', n), shade(n, 'skin')], [seg('sh', n), shade(n, 'skin')], [seg('th', n, 0, 0.45, 8.8, 7.6), shade(n, 'shorts')],
     [(J) => capsule(prj(J['F' + n]), prj(J['T' + n]), 4.4, 3.6), shade(n, 'shoe')],
   ];
   const armParts = (n) => [[seg('ua', n), shade(n, 'skin')], [seg('fa', n), shade(n, 'skin')], [seg('ua', n, -0.05, 0.42, 6.6, 6.1), shade(n, 'shirt')]];

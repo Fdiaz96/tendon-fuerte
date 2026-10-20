@@ -2,6 +2,15 @@
 
 Todos los cambios de Tendón Fuerte, del más nuevo al más viejo.
 
+## 1.13.12 — Sentadilla sumo con las rodillas hacia adelante
+
+- **Sentadilla sumo**: al bajar, las rodillas avanzan hacia adelante por encima de los pies en lugar de abrirse hacia los costados; los pies apuntan un poco hacia afuera y la cadera va hacia atrás. Se ve de tres cuartos y algo desde arriba para que se note el movimiento de las rodillas.
+- **Músculos según cómo se dobla la articulación**: el frente del muslo, del brazo y de la pierna se calcula según hacia dónde se dobla la rodilla o el codo, así el rojo cae siempre sobre el músculo correcto (antes, en la sumo, quedaba en la entrepierna).
+- **Glúteos**: se marcan en la parte posterior y lateral de la cadera, del lado que se ve. En el puente y el hip thrust ya no son un tajo fino debajo del muslo.
+- El short llega un poco más arriba en el muslo, para que el cuádriceps se vea sobre la piel.
+- **Press en el suelo y en banco**: cámara un poco más alta para ver el pecho y los dos brazos.
+- La cámara automática va de tres cuartos de frente a perfil; la vista de atrás queda solo para las dominadas.
+
 ## 1.13.11 — Sentadilla sumo bien hecha y segunda revisión completa
 
 - **Sentadilla sumo con pesa rusa**: al bajar, los muslos se abrían solo hacia los costados y se acortaban (piernas "de rana"). Ahora la cadera va hacia atrás, las rodillas avanzan sobre los pies, el torso se inclina un poco y los muslos mantienen su largo. Se ve casi de frente para que se note cómo se abren las dos rodillas.

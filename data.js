@@ -262,9 +262,10 @@ Object.assign(EXERCISES, {
     cues: ['Pies más abiertos que los hombros, puntas hacia afuera.', 'La pesa cuelga entre las piernas con los brazos estirados.', 'Bajá con el pecho alto y las rodillas siguiendo a los pies.'],
     fig: {
       front: true,
-      // x: cuánto va hacia adelante cada articulación (de frente no se ve): abajo, cadera atrás y rodillas sobre los pies.
-      a: { N: [100, 45], P: [100, 88], E1: [94, 68], W1: [100, 92], E2: [106, 68], W2: [100, 92], K1: [86, 119], F1: [78, 150], K2: [114, 119], F2: [122, 150], x: { K: 3 } },
-      b: { N: [100, 72], P: [100, 110], E1: [94, 93], W1: [100, 116], E2: [106, 93], W2: [100, 116], K1: [74, 122], F1: [78, 150], K2: [126, 122], F2: [122, 150], x: { N: 5, P: -9, K: 13, E: 7, W: 7 } },
+      // x: cuánto va hacia adelante cada articulación (de frente no se ve): al bajar, las rodillas avanzan hacia adelante
+      // por encima de los pies (no se abren hacia los costados) y la cadera va un poco atrás.
+      a: { N: [100, 45], P: [100, 88], E1: [94, 68], W1: [100, 92], E2: [106, 68], W2: [100, 92], K1: [84, 119], F1: [79, 150], K2: [116, 119], F2: [121, 150], T1: [75, 150], T2: [125, 150], x: { K: 3, F: 3, T: 13 } },
+      b: { N: [100, 72], P: [100, 110], E1: [94, 93], W1: [100, 116], E2: [106, 93], W2: [100, 116], K1: [79, 121], F1: [79, 150], K2: [121, 121], F2: [121, 150], T1: [75, 150], T2: [125, 150], x: { N: 7, P: -8, K: 17, F: 3, E: 9, W: 9, T: 13 } },
       props: [{ t: 'kb', at: 'W1' }],
     },
   },
@@ -357,9 +358,12 @@ Object.entries({
   goblet: { E: 10, W: 4 }, goblet_lenta: { E: 10, W: 4 }, sumo_kb: { E: 9, W: 3 }, swing: { E: 9, W: 3 }, triceps: { E: 9, W: 3 },
   pullover: { E: 10, W: 3 }, puente: { W: 9 }, hip_thrust: { W: 9 },
 }).forEach(([id, z]) => (EXERCISES[id].fig = { ...EXERCISES[id].fig, z }));
-// Cámara a mano donde el ángulo automático no muestra bien el ejercicio: dominadas (tres cuartos de atrás), sumo (casi de frente,
-// para ver las dos rodillas abrirse) y peso muerto rumano (casi de perfil, para ver la bisagra de cadera).
-Object.entries({ dominadas: -65, sumo_kb: 80, rdl: -15, remo_aros_iso: -15 }).forEach(([id, cam]) => (EXERCISES[id].fig = { ...EXERCISES[id].fig, cam }));
+// Cámara a mano donde el ángulo automático no muestra bien el ejercicio: dominadas (tres cuartos de atrás), sumo (de costado y desde
+// arriba, para ver las rodillas abrirse) y peso muerto rumano (casi de perfil, para ver la bisagra de cadera).
+Object.entries({ dominadas: -65, sumo_kb: 45, rdl: -15, remo_aros_iso: -15 }).forEach(([id, cam]) => (EXERCISES[id].fig = { ...EXERCISES[id].fig, cam }));
+EXERCISES.sumo_kb.fig.pitch = 35;   // un poco más desde arriba: se ve cómo las rodillas avanzan sobre los pies
+// Press acostados: un poco más desde arriba para ver el pecho y los dos brazos.
+for (const id of ['press_suelo', 'press_banco']) EXERCISES[id].fig = { ...EXERCISES[id].fig, cam: 40, pitch: 40 };
 
 
 // Cuerpo completo A/B (6 ejercicios por día). Sin banco: press en el suelo y remo apoyado en silla.
