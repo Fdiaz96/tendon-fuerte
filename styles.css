@@ -133,6 +133,12 @@ dialog.full .dlg-head { background: var(--bg); }
 .steps i { flex: 1; height: 4px; border-radius: 4px; background: var(--card2); }
 .steps i.on { background: var(--acc); }
 
+/* Novedades */
+.news h2 { color: var(--acc); margin-top: 18px; }
+.news ul { padding-left: 18px; margin: 6px 0; }
+.news li { margin: 6px 0; color: var(--text); }
+.news code { background: var(--card2); padding: 1px 5px; border-radius: 5px; }
+
 /* Gráficos */
 .chart { position: relative; }
 .chart svg { width: 100%; height: auto; display: block; overflow: visible; }

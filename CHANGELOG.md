@@ -2,6 +2,16 @@
 
 Todos los cambios de Tendón Fuerte, del más nuevo al más viejo.
 
+## 1.3.0 — Sesiones más cómodas
+
+- **Pantalla siempre prendida** mientras hacés un entreno o una rehabilitación (se apaga sola al terminar).
+- **Sonidos**: pitido al empezar, cuenta de los últimos 3 segundos y doble pitido al terminar cada serie y cada descanso. También vibra.
+- **Voz opcional** en español: "Sostené", "Mitad", "Descansá", "Siguiente serie".
+- **Isométricos manos libres**: después del descanso la serie siguiente arranca sola (se puede apagar).
+- **Descanso configurable** entre series de entreno: 60 s, 90 s, 2 min o 3 min.
+- **Novedades dentro de la app**: Ajustes → Fuentes → *Novedades* muestra este changelog, y cuando hay una versión nueva aparece una tarjeta en Inicio.
+- Todo se configura en Ajustes → *Durante la sesión*.
+
 ## 1.2.0 — Tu equipo y tu rutina
 
 - **Máquinas propias**: en Ajustes → Equipo → *Máquinas y otros equipos* cargás cualquier máquina (polea, prensa, barra con discos…) con su peso mínimo, máximo y salto. La app redondea las sugerencias a esos saltos.

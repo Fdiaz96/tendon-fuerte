@@ -1,7 +1,7 @@
 // Tendón Fuerte — rehabilitación de tendones y entreno con mancuernas. Los datos viven solo en el celular (IndexedDB).
 // Protocolo de tendones del video de Jeremy Ethier con Keith Baar y Coach Q; reglas en logic.js, bocetos en figures.js.
 
-const APP_VERSION = '1.2.0';
+const APP_VERSION = '1.3.0';
 const DAY_NAMES = { lu: 'Lu', ma: 'Ma', mi: 'Mi', ju: 'Ju', vi: 'Vi', sa: 'Sá', do: 'Do' };
 const SIDES = { der: 'derecha', izq: 'izquierda', ambos: 'ambos lados' };
 const REST_SECS = 90, ISO_REST = 60;
@@ -23,6 +23,7 @@ const DEFAULT = () => ({
   zones: {}, lifts: {}, sessions: [], checks: [], custom: [],
   plan: { budget: 0, week: '', next: 'A' },
   rem: { am: '08:00', pm: '20:00', train: ['lu', 'ju'], trainAt: '19:00' },
+  prefs: { sound: true, voice: false, rest: 90, auto: true }, seenVersion: '',
 });
 let S = DEFAULT();
 
@@ -38,7 +39,7 @@ const db = {
   async get(k) { const d = await this.open(); return new Promise((res, rej) => { const q = d.transaction('kv').objectStore('kv').get(k); q.onsuccess = () => res(q.result); q.onerror = () => rej(q.error); }); },
   async set(k, v) { const d = await this.open(); return new Promise((res, rej) => { const t = d.transaction('kv', 'readwrite'); t.objectStore('kv').put(v, k); t.oncomplete = res; t.onerror = () => rej(t.error); }); },
 };
-const withDefaults = (d) => { const base = DEFAULT(); return { ...base, ...d, profile: { ...base.profile, ...d.profile }, equip: { ...base.equip, ...d.equip }, plan: { ...base.plan, ...d.plan }, rem: { ...base.rem, ...d.rem }, templates: d.templates || base.templates, exlib: d.exlib || [] }; };
+const withDefaults = (d) => { const base = DEFAULT(); return { ...base, ...d, profile: { ...base.profile, ...d.profile }, equip: { ...base.equip, ...d.equip }, plan: { ...base.plan, ...d.plan }, rem: { ...base.rem, ...d.rem }, prefs: { ...base.prefs, ...d.prefs }, templates: d.templates || base.templates, exlib: d.exlib || [] }; };
 let saving = Promise.resolve();
 function persist() { const snap = JSON.parse(JSON.stringify(S)); saving = saving.then(() => db.set('data', snap)).catch((e) => toast('No se pudo guardar: ' + e.message)); return saving; }
 
@@ -167,6 +168,7 @@ function renderHome() {
     } else if (!activeZones().length) h += `<div class="card pain"><span class="tag pain">Modo dolor</span><p class="muted small">Marcá qué te duele en la pestaña Tendones para armar tu rehabilitación.</p></div>`;
   else h += `<div class="card pain"><span class="tag pain">Modo dolor</span><p class="muted small">Hoy no toca rehabilitación aparte${Object.values(S.zones).some((z) => z.phase === 3) ? ': los isométricos de mantenimiento van al final del entreno' : ''}.</p></div>`;
   }
+  if (S.onboarded && S.seenVersion !== APP_VERSION && S.seenVersion !== '') h += `<div class="card acc"><div class="row"><h3>Novedades de la versión ${APP_VERSION}</h3><button class="link" data-action="news-seen" aria-label="Cerrar">✕</button></div><button class="link" data-action="news">Ver qué cambió</button></div>`;
   const next = S.plan.next, plan = planFor(next), last = S.sessions.find((s) => s.type === 'entreno');
   h += `<div class="card acc"><div class="row"><span class="tag acc">Entreno ${next}</span><span class="muted small">${last ? `Último: ${fmtDate(last.date)}` : 'Primer entreno'}</span></div>
     <h3 style="margin-top:8px">Cuerpo completo · ${plan.filter((p) => !p.missing).length} ejercicios</h3>
@@ -330,7 +332,7 @@ function startWorkout(tpl) {
     ...p, rows: Array.from({ length: p.sets }, () => ({ w: p.w || 0, reps: '', rir: '', secs: p.secs || '', done: false })),
   }));
   W = { tpl, items, started: Date.now() };
-  renderWorkout(); $('wsheet').showModal(); calmMotion($('wsheet'));
+  renderWorkout(); $('wsheet').showModal(); calmMotion($('wsheet')); keepAwake(true);
 }
 function renderWorkout() {
   const body = W.items.map((it, i) => {
@@ -373,7 +375,7 @@ function setDone(i, j) {
     toast(`Calibrado: tu peso de trabajo es ${fmtKg(c.w)}${it.r ? ` (hoy ${fmtKg(it.w)} por modo dolor)` : ''}.`);
   }
   renderWorkout();
-  if (r.done && it.rows.some((x) => !x.done)) startRest(k === 'iso' ? ISO_REST : REST_SECS);
+  if (r.done && it.rows.some((x) => !x.done)) startRest(k === 'iso' ? ISO_REST : S.prefs.rest || REST_SECS);
 }
 function finishWorkout() {
   const items = W.items.map((it) => ({ ex: it.ex.id, name: it.ex.name, maint: it.maint || undefined, capped: !!it.r, sets: it.rows.filter((r) => r.done).map((r) => ({ w: Number(r.w) || 0, reps: Number(r.reps) || 0, rir: r.rir === '' ? null : Number(r.rir), secs: Number(r.secs) || 0 })) }))
@@ -394,7 +396,7 @@ function finishWorkout() {
   const session = { id: uid(), date: today(), type: 'entreno', tpl: W.tpl, items };
   const zones = [...new Set(W.items.flatMap((it) => (it.r ? it.r.zones : it.maint ? [it.maint] : [])))];
   S.plan.next = W.tpl === 'A' ? 'B' : 'A';
-  stopRest(); W = null; $('wsheet').close();
+  stopRest(); W = null; $('wsheet').close(); keepAwake(false);
   if (S.painMode && zones.length) askPain(session, zones);
   else saveSession(session);
 }
@@ -409,14 +411,67 @@ function startRest(secs) {
   stopRest();
   const el = $('rest'), end = Date.now() + secs * 1000;
   overlayHost().appendChild(el); el.hidden = false;
+  let last = secs;
   const tick = () => {
     const left = Math.max(0, Math.round((end - Date.now()) / 1000));
     $('rest-time').textContent = `${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')}`;
-    if (!left) { stopRest(); navigator.vibrate?.(300); }
+    if (left !== last && left > 0 && left <= 3) cue('tick');
+    last = left;
+    if (!left) { stopRest(); cue('go', 'Siguiente serie'); }
   };
   tick(); restTimer = setInterval(tick, 250);
 }
 function stopRest() { clearInterval(restTimer); restTimer = null; $('rest').hidden = true; }
+
+// ——— Sonidos, voz y pantalla prendida ———
+let audioCtx = null;
+// kind: 'tick' (cuenta final), 'go' (empezar), 'done' (terminar); text: lo que dice la voz si está activada.
+function cue(kind, text) {
+  if (kind) navigator.vibrate?.(kind === 'tick' ? 40 : kind === 'done' ? [180, 80, 180] : 120);
+  if (S.prefs.sound && kind) {
+    try {
+      audioCtx ||= new (window.AudioContext || window.webkitAudioContext)();
+      const notes = { tick: [[660, 0.07]], go: [[880, 0.12]], done: [[880, 0.1], [1175, 0.16]] }[kind];
+      let t = audioCtx.currentTime;
+      for (const [f, d] of notes) {
+        const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+        o.frequency.value = f; o.type = 'sine';
+        g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.25, t + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + d);
+        o.connect(g).connect(audioCtx.destination); o.start(t); o.stop(t + d + 0.02); t += d + 0.04;
+      }
+    } catch {}
+  }
+  if (S.prefs.voice && text && 'speechSynthesis' in window) {
+    try { speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(text); u.lang = 'es-AR'; u.rate = 1.05; speechSynthesis.speak(u); } catch {}
+  }
+}
+let wakeLock = null;
+async function keepAwake(on) {
+  try {
+    if (on && !wakeLock && 'wakeLock' in navigator) { wakeLock = await navigator.wakeLock.request('screen'); wakeLock.addEventListener('release', () => (wakeLock = null)); }
+    if (!on && wakeLock) { await wakeLock.release(); wakeLock = null; }
+  } catch { wakeLock = null; }
+}
+
+// ——— Novedades (CHANGELOG.md) ———
+function mdLite(md) {
+  const inline = (t) => esc(t).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/\*(.+?)\*/g, '<i>$1</i>').replace(/`(.+?)`/g, '<code>$1</code>');
+  let html = '', list = false;
+  for (const line of md.split(/\r?\n/)) {
+    if (/^- /.test(line)) { if (!list) { html += '<ul>'; list = true; } html += `<li>${inline(line.slice(2))}</li>`; continue; }
+    if (list) { html += '</ul>'; list = false; }
+    if (/^## /.test(line)) html += `<h2>${inline(line.slice(3))}</h2>`;
+    else if (line.trim() && !/^# /.test(line)) html += `<p class="muted">${inline(line)}</p>`;
+  }
+  return html + (list ? '</ul>' : '');
+}
+async function openNews() {
+  let md = '';
+  try { md = await (await fetch('CHANGELOG.md', { cache: 'no-cache' })).text(); } catch { md = 'No se pudieron cargar las novedades sin conexión.'; }
+  dlg('newssheet').html = `<div class="dlg news"><div class="dlg-head"><strong>Novedades</strong><button class="link" data-action="close" data-dlg="newssheet">Cerrar</button></div>${mdLite(md)}</div>`;
+  if (!$('newssheet').open) $('newssheet').showModal();
+  if (S.seenVersion !== APP_VERSION) { S.seenVersion = APP_VERSION; persist(); render(); }
+}
 
 // ——— Sesión de rehabilitación ———
 let R = null;   // { slot, items, idx, set, phase: 'listo'|'hold'|'rest', end, timer }
@@ -424,7 +479,7 @@ function startRehab() {
   const items = rehabItems().map((it) => ({ ...it, done: 0 }));
   const custom = S.custom.filter((c) => !c.zone || S.zones[c.zone]).map((c) => ({ custom: c, done: false }));
   R = { slot: slotNow(), items, custom, idx: 0, state: 'listo' };
-  renderRehab(); $('rsheet').showModal(); calmMotion($('rsheet'));
+  renderRehab(); $('rsheet').showModal(); calmMotion($('rsheet')); keepAwake(true);
 }
 function renderRehab() {
   const it = R.items[R.idx];
@@ -461,21 +516,26 @@ function rehabTick() {
     const total = R.state === 'rest' ? ISO_REST : R.items[R.idx].secs, bar = $('rsheet').querySelector('.timer .bar');
     if ($('r-left')) $('r-left').textContent = left;
     if (bar) bar.style.strokeDashoffset = 2 * Math.PI * 100 * (1 - left / total);
+    if (left > 0 && left <= 3) cue('tick');
+    if (R.state === 'hold' && left === Math.floor(total / 2) && total >= 20) cue(null, 'Mitad');
   }
   if (left > 0) return;
   clearInterval(R.timer); R.timer = null; R.left = null;
   const it = R.items[R.idx];
   if (R.state === 'hold') {
-    it.done++; navigator.vibrate?.([200, 100, 200]);
-    if (it.done >= it.sets) { R.state = 'listo'; R.idx++; }
-    else { R.state = 'rest'; R.end = Date.now() + ISO_REST * 1000; R.timer = setInterval(rehabTick, 250); }
-  } else if (R.state === 'rest') R.state = 'listo';
+    it.done++;
+    if (it.done >= it.sets) { R.state = 'listo'; R.idx++; cue('done', R.items[R.idx] ? 'Listo. Siguiente ejercicio' : 'Terminaste'); }
+    else { R.state = 'rest'; R.end = Date.now() + ISO_REST * 1000; R.timer = setInterval(rehabTick, 250); cue('done', 'Descansá'); }
+  } else if (R.state === 'rest') {
+    R.state = 'listo';
+    if (S.prefs.auto) return rehabGo();   // manos libres: la serie siguiente arranca sola
+  }
   renderRehab();
 }
 function rehabGo() {
   const it = R.items[R.idx];
   R.state = 'hold'; R.end = Date.now() + it.secs * 1000; R.left = it.secs;
-  R.timer = setInterval(rehabTick, 250); renderRehab();
+  R.timer = setInterval(rehabTick, 250); renderRehab(); cue('go', 'Sostené');
 }
 function rehabSkip() { R.end = Date.now(); rehabTick(); }
 function finishRehab() {
@@ -486,7 +546,7 @@ function finishRehab() {
   const session = { id: uid(), date: today(), type: 'rehab', slot: R.slot, items };
   if (!items.length) { toast('No hiciste ningún ejercicio todavía.'); return; }
   const zones = [...new Set([...done.map((i) => i.zone), ...R.custom.filter((c) => c.done && c.custom.zone).map((c) => c.custom.zone)])];
-  R = null; $('rsheet').close();
+  R = null; $('rsheet').close(); keepAwake(false);
   if (zones.length) askPain(session, zones); else saveSession(session);
 }
 
@@ -640,6 +700,12 @@ function renderSettings() {
     <span class="small muted">Experiencia</span><div class="chips" style="margin-top:4px">${EXPERIENCE.map((x) => `<button class="chip${p.exp === x.id ? ' on' : ''}" data-action="set-exp" data-v="${x.id}">${x.name}</button>`).join('')}</div>
     <p class="faint small">Con sexo, peso, edad y experiencia estimamos tu peso inicial; la serie de calibración lo ajusta. La altura casi no cambia el cálculo.</p></div>
   <h2>Equipo</h2><div class="card">${equipFields()}</div>
+  <h2>Durante la sesión</h2><div class="card">
+    <div class="row"><div><h3>Sonidos</h3><p class="muted small">Pitidos al empezar, en los últimos 3 s y al terminar.</p></div><label class="switch acc"><input type="checkbox" data-action="pref-toggle" data-k="sound" ${S.prefs.sound ? 'checked' : ''} aria-label="Sonidos"><i></i></label></div>
+    <div class="row"><div><h3>Voz</h3><p class="muted small">"Sostené", "Descansá", "Siguiente serie".</p></div><label class="switch acc"><input type="checkbox" data-action="pref-toggle" data-k="voice" ${S.prefs.voice ? 'checked' : ''} aria-label="Voz"><i></i></label></div>
+    <div class="row"><div><h3>Isométricos manos libres</h3><p class="muted small">Después del descanso, la serie siguiente arranca sola.</p></div><label class="switch acc"><input type="checkbox" data-action="pref-toggle" data-k="auto" ${S.prefs.auto ? 'checked' : ''} aria-label="Manos libres"><i></i></label></div>
+    <span class="small muted">Descanso entre series de entreno</span><div class="chips" style="margin-top:4px">${[60, 90, 120, 180].map((n) => `<button class="chip${S.prefs.rest === n ? ' on' : ''}" data-action="pref" data-k="rest" data-v="${n}">${n < 120 ? n + ' s' : n / 60 + ' min'}</button>`).join('')}</div>
+    <p class="faint small">La pantalla queda prendida mientras entrenás.</p></div>
   <h2>Recordatorios</h2><div class="card">
     <p class="muted small">Se agregan a tu calendario: es la forma más confiable de recibir avisos sin servidor.</p>
     <div class="grid2"><label class="field"><span>Isométricos mañana</span><input type="time" data-set="rem.am" value="${S.rem.am}"></label><label class="field"><span>Isométricos noche</span><input type="time" data-set="rem.pm" value="${S.rem.pm}"></label></div>
@@ -655,7 +721,7 @@ function renderSettings() {
   <h2>Fuentes</h2><div class="card small">
     <p class="muted">Protocolo de tendones basado en:</p><ul>${SOURCES.map((s) => `<li><a href="${s.url}" target="_blank" rel="noopener">${esc(s.title)}</a></li>`).join('')}</ul>
     <p class="muted">Ilustraciones generadas por código para esta app (sin imágenes de terceros). Tendón Fuerte no es un consejo médico: consultá a un profesional ante dolor agudo, hinchazón o pérdida de fuerza.</p>
-    <p class="faint">Versión ${APP_VERSION}</p></div>
+    <p class="faint">Versión ${APP_VERSION} · <button class="link" data-action="news">Novedades</button></p></div>
   <button class="link danger" data-action="reset">Borrar todos los datos</button>`;
   $('view-settings').innerHTML = h;
   navigator.storage?.persisted?.().then((ok) => { const el = $('persist-status'); if (el) el.textContent = ok ? '✓ Almacenamiento persistente: el navegador no borra los datos por falta de espacio.' : 'El navegador podría borrar los datos si falta espacio: instalá la app y guardá copias.'; });
@@ -713,7 +779,7 @@ function renderOnb() {
 function onbNext() {
   if (onbStep === 1 && !(Number(S.profile.weight) > 0)) return toast('Poné tu peso para estimar las cargas.');
   if (onbStep < ONB_STEPS - 1) { onbStep++; renderOnb(); $('onb').querySelector('.dlg').scrollTop = 0; return; }
-  S.onboarded = true; syncBudget(); persist();
+  S.onboarded = true; S.seenVersion = APP_VERSION; syncBudget(); persist();
   navigator.storage?.persist?.();
   $('onb').close(); render();
 }
@@ -749,7 +815,7 @@ document.addEventListener('click', (e) => {
   const a = el.dataset.action, d = el.dataset;
   const actions = {
     'start-workout': () => startWorkout(d.tpl),
-    'cancel-workout': () => { if (confirm('¿Salir sin guardar el entreno?')) { stopRest(); W = null; $('wsheet').close(); } },
+    'cancel-workout': () => { if (confirm('¿Salir sin guardar el entreno?')) { stopRest(); W = null; $('wsheet').close(); keepAwake(false); } },
     'finish-workout': finishWorkout,
     'set-done': () => setDone(+d.i, +d.j),
     'skip-rest': stopRest,
@@ -763,7 +829,10 @@ document.addEventListener('click', (e) => {
     'rehab-next': () => { R.idx++; R.state = 'listo'; renderRehab(); },
     'custom-done': () => { R.custom[+d.i].done = !R.custom[+d.i].done; renderRehab(); },
     'finish-rehab': finishRehab,
-    'cancel-rehab': () => { if (confirm('¿Salir sin guardar la sesión?')) { clearInterval(R?.timer); R = null; $('rsheet').close(); } },
+    'cancel-rehab': () => { if (confirm('¿Salir sin guardar la sesión?')) { clearInterval(R?.timer); R = null; $('rsheet').close(); keepAwake(false); } },
+    'pref': () => { S.prefs[d.k] = d.v === undefined ? !S.prefs[d.k] : Number(d.v); persist(); render(); if (d.k === 'sound' || d.k === 'voice') cue('go', 'Así suena'); },
+    'news': openNews,
+    'news-seen': () => { S.seenVersion = APP_VERSION; persist(); render(); },
     'pain-val': () => { P.vals[d.zone] = +d.n; renderPain(); },
     'save-pain': savePain,
     'check': () => answerCheck(d.zone, d.val),
@@ -836,6 +905,7 @@ document.addEventListener('change', (e) => {
     if (el.checked && el.dataset.k === 'bench' && S.templates.A.includes('press_suelo')) toast('Con banco podés cambiar el press en el suelo por press en banco: Entreno → Editar rutina.');
     if (el.checked && el.dataset.k === 'bar') toast('Las dominadas quedan disponibles en Entreno → Editar rutina (cuidado con el codo).');
   }
+  if (a === 'pref-toggle') { S.prefs[el.dataset.k] = el.checked; persist(); if (el.checked && el.dataset.k !== 'auto') cue('go', 'Así suena'); }
   if (a === 'hist-zone') { histZone = el.value; renderHistory(); }
   if (a === 'hist-ex') { histEx = el.value; renderHistory(); }
   if (el.id === 'import-file' && el.files[0]) { importData(el.files[0]); el.value = ''; }
@@ -847,7 +917,9 @@ document.addEventListener('cancel', (e) => { if (['wsheet', 'rsheet', 'painsheet
 // ——— Arranque ———
 (async () => {
   try { const d = await db.get('data'); if (d) S = withDefaults(d); } catch (e) { toast('No se pudo abrir la base de datos: ' + e.message); }
+  if (!S.onboarded || !S.seenVersion) { S.seenVersion = S.onboarded ? '1.2.0' : APP_VERSION; }   // quien ya usaba la app ve las novedades nuevas
   render();
   if (!S.onboarded) { renderOnb(); $('onb').showModal(); }
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && (W || R)) keepAwake(true); });
   if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js');
 })();

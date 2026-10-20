@@ -174,6 +174,16 @@ await click('[data-action="edit-routine"]');
 const jalon = page.locator('#view-train .ex', { hasText: 'Jalón en polea' });
 ok((await jalon.locator('.num').textContent()).trim() === '5', 'arranca en el mínimo de la máquina (5 kg) para calibrar');
 
+// 8c. Preferencias de sesión y novedades
+await click('[data-tab="settings"]');
+await click('#view-settings [data-action="pref"][data-k="rest"][data-v="120"]');
+ok((await state()).prefs.rest === 120, 'cambia el descanso entre series a 2 min');
+await click('#view-settings [data-action="news"]');
+await page.waitForSelector('#newssheet[open] h2');
+ok((await page.locator('#newssheet').textContent()).includes('1.3.0'), 'Novedades muestra el changelog');
+await shot('17-novedades');
+await click('#newssheet [data-action="close"]');
+
 // 9. Calendario y copia
 await click('[data-tab="settings"]');
 await shot('14-ajustes');
