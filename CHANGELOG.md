@@ -2,6 +2,19 @@
 
 Todos los cambios de Tendón Fuerte, del más nuevo al más viejo.
 
+## 1.7.0 — Biblioteca ampliada
+
+- **13 ejercicios nuevos con ilustración animada**, pensados para ganar músculo en casa con mancuernas, pesa rusa y peso corporal. Aparecen en Entreno → *Editar rutina* → cambiar/agregar:
+  - **Piernas**: sentadilla búlgara (pie atrás en una silla), sentadilla sumo con pesa rusa, gemelos a una pierna.
+  - **Cadera**: hip thrust con mancuerna (espalda en una silla), peso muerto a una pierna.
+  - **Tirón**: remo inclinado con dos mancuernas, pullover (con banco).
+  - **Empuje**: flexiones de brazos (con variantes más fáciles y apoyo neutro para la muñeca).
+  - **Hombro**: elevación frontal.
+  - **Brazos**: curl concentrado, patada de tríceps, press francés en el suelo.
+  - **Core**: dead bug.
+- Cada uno indica qué tendones exige, así el modo dolor los limita al 60 % o los cambia por una variante amable cuando corresponde.
+- Ahora hay 44 ejercicios en total.
+
 ## 1.6.0 — Calculadora de discos e instalación
 
 - **Mancuernas de discos** (Ajustes → Equipo → Mancuernas → *Son de discos*): cargás el peso de la barra y tus discos (peso y cantidad total). La app:
