@@ -1,4 +1,4 @@
-// Pruebas de punta a punta de Tendón Fuerte (Playwright + Chromium).
+// Pruebas de punta a punta de XZ Fit (Playwright + Chromium).
 // Uso: python -m http.server 8124 & ; node tests/e2e.mjs   (SHOTS=carpeta guarda capturas)
 import { chromium } from 'playwright';
 import fs from 'fs';
@@ -64,6 +64,7 @@ await click('[data-tab="train"]');
 ok(await page.locator('#view-train >> text=al 60 %').count() === 0, 'sin modo dolor no hay tope del 60 %');
 ok(await page.locator('#view-train >> text=Remo invertido en aros').count() === 1, 'con aros incluye el remo invertido');
 await shot('06-entreno');
+ok(await page.locator('#view-train .thumb svg animate').count() > 0, 'las miniaturas del entreno están animadas');
 
 // 3. Modo dolor
 await click('[data-tab="home"]');

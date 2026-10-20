@@ -1,4 +1,4 @@
-// Reglas de Tendón Fuerte, sin DOM: pesos sugeridos, calibración, progresión, modo dolor, volumen y calendario.
+// Reglas de XZ Fit, sin DOM: pesos sugeridos, calibración, progresión, modo dolor, volumen y calendario.
 // Funciones puras para poder probarlas con node (tests/unit.mjs).
 
 const REPS_MIN = 8, REPS_MAX = 12, TARGET_REPS = 10, TARGET_RIR = 2;
@@ -225,12 +225,12 @@ function icsText(rem, painMode, today) {
   const start = today.replace(/-/g, ''), stamp = new Date().toISOString().replace(/[-:]/g, '').slice(0, 15) + 'Z';
   const t = (hhmm) => hhmm.replace(':', '') + '00';
   const ev = (uid, time, rule, title, desc) => ['BEGIN:VEVENT', `UID:${uid}@tendon-fuerte`, `DTSTAMP:${stamp}`, `DTSTART:${start}T${t(time)}`, `DURATION:PT15M`, `RRULE:${rule}`, `SUMMARY:${title}`, `DESCRIPTION:${desc}`, 'BEGIN:VALARM', 'ACTION:DISPLAY', `DESCRIPTION:${title}`, 'TRIGGER:PT0M', 'END:VALARM', 'END:VEVENT'];
-  const lines = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Tendon Fuerte//ES', 'CALSCALE:GREGORIAN'];
+  const lines = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//XZ Fit//ES', 'CALSCALE:GREGORIAN'];
   if (painMode) {
-    lines.push(...ev('rehab-am', rem.am, 'FREQ=DAILY', 'Tendón Fuerte: isométricos (mañana)', 'Abrí la app y hacé tu sesión de rehabilitación.'));
-    lines.push(...ev('rehab-pm', rem.pm, 'FREQ=DAILY', 'Tendón Fuerte: isométricos (noche)', 'Abrí la app y hacé tu sesión de rehabilitación.'));
+    lines.push(...ev('rehab-am', rem.am, 'FREQ=DAILY', 'XZ Fit: isométricos (mañana)', 'Abrí la app y hacé tu sesión de rehabilitación.'));
+    lines.push(...ev('rehab-pm', rem.pm, 'FREQ=DAILY', 'XZ Fit: isométricos (noche)', 'Abrí la app y hacé tu sesión de rehabilitación.'));
   }
-  if (rem.train?.length) lines.push(...ev('entreno', rem.trainAt, `FREQ=WEEKLY;BYDAY=${rem.train.map((d) => DAYS_ICS[d]).join(',')}`, 'Tendón Fuerte: entreno', 'Toca entreno de cuerpo completo.'));
+  if (rem.train?.length) lines.push(...ev('entreno', rem.trainAt, `FREQ=WEEKLY;BYDAY=${rem.train.map((d) => DAYS_ICS[d]).join(',')}`, 'XZ Fit: entreno', 'Toca entreno de cuerpo completo.'));
   lines.push('END:VCALENDAR');
   return lines.join('\r\n') + '\r\n';
 }

@@ -1,7 +1,8 @@
-// Tendón Fuerte — rehabilitación de tendones y entreno con mancuernas. Los datos viven solo en el celular (IndexedDB).
+// XZ Fit (antes Tendón Fuerte) — rehabilitación de tendones y entreno con mancuernas. Los datos viven solo en el celular
+// (IndexedDB). Los identificadores internos siguen siendo "tendon-fuerte" para no perder los datos ya guardados.
 // Protocolo de tendones del video de Jeremy Ethier con Keith Baar y Coach Q; reglas en logic.js, bocetos en figures.js.
 
-const APP_VERSION = '1.13.12';
+const APP_VERSION = '1.14.0';
 const DAY_NAMES = { lu: 'Lu', ma: 'Ma', mi: 'Mi', ju: 'Ju', vi: 'Vi', sa: 'Sá', do: 'Do' };
 const SIDES = { der: 'derecha', izq: 'izquierda', ambos: 'ambos lados' };
 const REST_SECS = 90, ISO_REST = 60;
@@ -226,7 +227,7 @@ function renderTrain() {
     const plan = planFor(tpl);
     h += `<h2>Día ${tpl}${S.plan.next === tpl ? ' · toca hoy' : ''}</h2><div class="card">`;
     h += plan.map((p, i) => `<div class="ex"${editRoutine ? '' : ` data-action="ex-detail" data-ex="${p.ex.id}"`} style="padding:6px 0">
-        <div class="thumb">${figureSVG(p.ex, { animate: false, crop: true })}</div>
+        <div class="thumb">${figureSVG(p.ex, { crop: true })}</div>
         <div class="info"><h3>${esc(p.ex.name)}</h3><p class="muted small">${p.missing ? 'Falta equipo' : `${p.sets} × ${setLabel(p)}`}${p.r ? ` · <span style="color:var(--pain-fg)">${p.r.mode === 'alt' ? 'variante amable' : 'al 60 %'}</span>` : ''}</p>${p.stalled && !editRoutine ? `<p class="small" style="color:var(--acc-fg);margin:2px 0 0">Estancado · <button class="link small" data-action="unstall" data-ex="${p.ex.id}">bajar 10 % y volver a subir</button></p>` : ''}</div>
         ${editRoutine ? `<div class="tools"><button data-action="routine-move" data-tpl="${tpl}" data-i="${i}" data-d="-1" aria-label="Subir" ${i ? '' : 'disabled'}>↑</button><button data-action="routine-move" data-tpl="${tpl}" data-i="${i}" data-d="1" aria-label="Bajar" ${i < plan.length - 1 ? '' : 'disabled'}>↓</button><button data-action="routine-pick" data-tpl="${tpl}" data-i="${i}" aria-label="Cambiar">⇄</button><button data-action="routine-del" data-tpl="${tpl}" data-i="${i}" aria-label="Quitar">✕</button></div>`
           : `<div class="w">${p.ex.kind === 'peso' ? `<span class="num">${p.w || '—'}</span><div class="small muted">${p.calib ? 'calibrar' : 'kg'}</div>` : ''}</div>`}</div>`).join('');
@@ -675,7 +676,7 @@ function renderTendons() {
       const ex = rehabEx(zd.id, z.phase), opts = z.phase < 3 ? rehabOptions(zd.id, z.phase) : [];
       h += `<div class="chips" style="margin-top:10px">${Object.entries(SIDES).map(([k, v]) => `<button class="chip${z.side === k ? ' on' : ''}" data-action="zone-side" data-zone="${zd.id}" data-side="${k}">${v}</button>`).join('')}</div>
         <p class="small" style="margin-top:10px"><b>${esc(PHASES[z.phase].name)}</b> · desde ${fmtDate(z.since)}<br><span class="muted">${esc(PHASES[z.phase].what)}</span></p>
-        ${z.phase < 3 ? `<div class="ex" data-action="ex-detail" data-ex="${ex.id}"><div class="thumb">${figureSVG(ex, { animate: false, crop: true })}</div><div class="info"><h3>${esc(ex.name)}</h3><p class="muted small">${z.load ? fmtKg(z.load) + ' · ' : ''}${z.phase === 1 ? `${ISO_SETS} × ${z.secs || ISO_SECS} s` : `${LENTO_SETS} × ${LENTO_REPS}`}</p></div></div>` : ''}
+        ${z.phase < 3 ? `<div class="ex" data-action="ex-detail" data-ex="${ex.id}"><div class="thumb">${figureSVG(ex, { crop: true })}</div><div class="info"><h3>${esc(ex.name)}</h3><p class="muted small">${z.load ? fmtKg(z.load) + ' · ' : ''}${z.phase === 1 ? `${ISO_SETS} × ${z.secs || ISO_SECS} s` : `${LENTO_SETS} × ${LENTO_REPS}`}</p></div></div>` : ''}
         ${opts.length > 1 ? `<p class="small muted" style="margin:8px 0 4px">Otras opciones para esta fase:</p><div class="chips">${opts.map((o) => `<button class="chip pain${o.id === ex.id ? ' on' : ''}" data-action="rehab-choice" data-zone="${zd.id}" data-ex="${o.id}">${esc(o.name)}</button>`).join('')}</div>` : ''}
         <div class="btns" style="margin-top:8px">${z.phase > 1 ? `<button class="sec" data-action="phase" data-zone="${zd.id}" data-dir="-1">← Fase ${z.phase - 1}</button>` : ''}${z.phase < 3 ? `<button class="sec" data-action="phase" data-zone="${zd.id}" data-dir="1">Fase ${z.phase + 1} →</button>` : ''}</div>
         <p class="faint small">${z.phase < 3 ? (phaseReady(S, zd.id, today()) ? '✓ Lista para avanzar.' : 'Para avanzar: 10 días en la fase y una semana con dolor ≤ 3 sin empeorar.') : ''}</p>`;
@@ -746,10 +747,10 @@ function reportHTML() {
   };
   const train = recent.filter((s) => s.type === 'entreno'), rehab = recent.filter((s) => s.type === 'rehab');
   const custom = S.custom.length ? `<h2>Ejercicios indicados por el fisio</h2><ul>${S.custom.map((c) => `<li>${esc(c.name)}: ${c.sets} × ${c.value} ${c.mode === 'segundos' ? 's' : 'reps'}${c.note ? ` — ${esc(c.note)}` : ''}</li>`).join('')}</ul>` : '';
-  return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Informe Tendón Fuerte</title>
+  return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Informe XZ Fit</title>
 <style>:root{--pain:#E8590C;--acc:#5C940D;--line:#DEE2E6;--faint:#868E96;--card:#fff}body{font:15px/1.45 system-ui,sans-serif;color:#212529;max-width:760px;margin:24px auto;padding:0 16px}h1{margin:0}h2{margin:28px 0 6px;font-size:19px}.muted{color:#6C757D}table{border-collapse:collapse;width:100%;font-size:13px;margin-top:8px}th,td{border:1px solid var(--line);padding:5px;text-align:center}th{text-align:left;background:#F8F9FA}.chart svg{width:100%;max-width:520px;display:block}.chart .grid{stroke:var(--line)}.chart .axis{fill:var(--faint);font-size:11px}.chart .limit{stroke:var(--pain);stroke-dasharray:4 4;opacity:.7}.chart .series{fill:none;stroke-width:2}.chart .dot{stroke:#fff;stroke-width:2}.chart .hit{fill:transparent}.chart .empty{color:var(--faint);padding:12px 0}section{break-inside:avoid}@media print{button{display:none}}</style></head><body>
 <h1>Informe de rehabilitación</h1>
-<p class="muted">${esc(S.profile.name || 'Paciente')} · del ${fmtDate(from)} al ${fmtDate(t)} · generado con Tendón Fuerte ${APP_VERSION}</p>
+<p class="muted">${esc(S.profile.name || 'Paciente')} · del ${fmtDate(from)} al ${fmtDate(t)} · generado con XZ Fit ${APP_VERSION}</p>
 <p>Protocolo: isométricos (3 × 30–45 s, mañana y noche), luego isotónicos lentos 3 s/3 s y reintegración, con dolor tolerado hasta 3–4/10 y sin empeorar al día siguiente. Modo dolor ${S.painMode ? 'activo' : 'apagado'}.</p>
 <p><b>${rehab.length}</b> sesiones de rehabilitación y <b>${train.length}</b> entrenos en el período.</p>
 ${zones.map(zoneBlock).join('') || '<p class="muted">Sin zonas con dolor registradas.</p>'}
@@ -817,7 +818,7 @@ function renderSettings() {
     <p class="faint small" id="persist-status"></p></div>
   <h2>Fuentes</h2><div class="card small">
     <p class="muted">Protocolo de tendones basado en:</p><ul>${SOURCES.map((s) => `<li><a href="${s.url}" target="_blank" rel="noopener">${esc(s.title)}</a></li>`).join('')}</ul>
-    <p class="muted">Ilustraciones generadas por código para esta app (sin imágenes de terceros). Tendón Fuerte no es un consejo médico: consultá a un profesional ante dolor agudo, hinchazón o pérdida de fuerza.</p>
+    <p class="muted">Ilustraciones generadas por código para esta app (sin imágenes de terceros). XZ Fit no es un consejo médico: consultá a un profesional ante dolor agudo, hinchazón o pérdida de fuerza.</p>
     <p class="faint">Versión ${APP_VERSION} · <button class="link" data-action="news">Novedades</button></p></div>
   <button class="link danger" data-action="reset">Borrar todos los datos</button>`;
   $('view-settings').innerHTML = h;
@@ -888,7 +889,7 @@ function renderOnb() {
   const p = S.profile;
   const steps = `<div class="steps">${Array.from({ length: ONB_STEPS }, (_, i) => `<i class="${i <= onbStep ? 'on' : ''}"></i>`).join('')}</div>`;
   let body = '';
-  if (onbStep === 0) body = `<h1>Tendón Fuerte</h1><div class="hero-fig">${figureSVG(EXERCISES.iso_ext_muneca)}</div>
+  if (onbStep === 0) body = `<h1><span style="color:var(--acc-fg)">XZ</span> Fit</h1><div class="hero-fig">${figureSVG(EXERCISES.iso_ext_muneca)}</div>
     <p>Rehabilitación de tendones y entreno con mancuernas, con reglas basadas en evidencia.</p>
     <p class="muted small">Protocolo de isométricos del video de Jeremy Ethier con el investigador Keith Baar y el fisioterapeuta Coach Q. No reemplaza a un profesional.</p>
     <p class="muted small">Tus datos quedan solo en este teléfono.</p>`;
@@ -926,11 +927,11 @@ async function shareFile(name, text, type) {
   const a = document.createElement('a'); a.href = URL.createObjectURL(file); a.download = name;
   document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 5000);
 }
-function exportData() { shareFile(`tendon-fuerte-${today()}.json`, JSON.stringify({ app: 'tendon-fuerte', version: APP_VERSION, data: S }, null, 1), 'application/json'); }
+function exportData() { shareFile(`xz-fit-${today()}.json`, JSON.stringify({ app: 'tendon-fuerte', version: APP_VERSION, data: S }, null, 1), 'application/json'); }
 async function importData(file) {
   try {
     const j = JSON.parse(await file.text()), d = j.data || j;
-    if (!d.profile || !Array.isArray(d.sessions)) throw new Error('no es una copia de Tendón Fuerte');
+    if (!d.profile || !Array.isArray(d.sessions)) throw new Error('no es una copia de XZ Fit');
     if (!confirm(`¿Reemplazar tus datos por la copia (${d.sessions.length} sesiones)?`)) return;
     S = withDefaults(d); S.onboarded = true; applyTheme(); await persist(); render(); toast('Copia restaurada.');
   } catch (e) { toast('No se pudo leer el archivo: ' + e.message); }
@@ -983,7 +984,7 @@ document.addEventListener('click', (e) => {
     'install': installApp,
     'install-hide': () => { S.hideInstall = true; persist(); render(); },
     'warm': () => { W.warm[+d.i].done = !W.warm[+d.i].done; renderWorkout(); },
-    'report': () => shareFile(`informe-tendon-fuerte-${today()}.html`, reportHTML(), 'text/html'),
+    'report': () => shareFile(`informe-xz-fit-${today()}.html`, reportHTML(), 'text/html'),
     'news-seen': () => { S.seenVersion = APP_VERSION; persist(); render(); },
     'pain-val': () => { P.vals[d.zone] = +d.n; renderPain(); },
     'save-pain': savePain,
@@ -1017,7 +1018,7 @@ document.addEventListener('click', (e) => {
     'set-sex': () => { S.profile.sex = d.v; persist(); $('onb').open ? renderOnb() : render(); },
     'set-exp': () => { S.profile.exp = d.v; persist(); $('onb').open ? renderOnb() : render(); },
     'rem-day': () => { const t = S.rem.train; S.rem.train = t.includes(d.v) ? t.filter((x) => x !== d.v) : Object.keys(DAY_NAMES).filter((k) => t.includes(k) || k === d.v); persist(); $('onb').open ? renderOnb() : render(); },
-    'ics': () => shareFile('tendon-fuerte.ics', icsText(S.rem, S.painMode, today()), 'text/calendar'),
+    'ics': () => shareFile('xz-fit.ics', icsText(S.rem, S.painMode, today()), 'text/calendar'),
     'export': exportData,
     'import': () => $('import-file').click(),
     'reset': () => { if (confirm('¿Borrar todos los datos? No se puede deshacer.') && confirm('¿Seguro? Se pierde todo el historial.')) { S = DEFAULT(); persist(); onbStep = 0; renderOnb(); $('onb').showModal(); } },

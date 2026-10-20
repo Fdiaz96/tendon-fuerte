@@ -1,7 +1,7 @@
 {
-  "name": "Tendón Fuerte",
-  "short_name": "Tendón Fuerte",
-  "description": "Rehabilitación de tendones y entreno con mancuernas.",
+  "name": "XZ Fit",
+  "short_name": "XZ Fit",
+  "description": "Entreno con mancuernas y rehabilitación de tendones.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

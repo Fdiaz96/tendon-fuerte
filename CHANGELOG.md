@@ -1,6 +1,14 @@
 # Changelog
 
-Todos los cambios de Tendón Fuerte, del más nuevo al más viejo.
+Todos los cambios de XZ Fit (antes Tendón Fuerte), del más nuevo al más viejo.
+
+## 1.14.0 — Ahora se llama XZ Fit
+
+- **Nuevo nombre: XZ Fit.** Cambia en la pantalla de inicio del celular, en la bienvenida, en el informe para el fisio, en los recordatorios del calendario y en los archivos que exporta la app.
+- **Logo nuevo**: "XZ" en verde lima con trazo redondeado y "FIT" debajo, sobre fondo oscuro.
+- **Las miniaturas se mueven**: en la pantalla de Entreno (y en la de Tendones) cada ejercicio muestra su animación en chico, sin tener que abrirlo.
+- Tus datos no se tocan: la app sigue guardando todo en el mismo lugar, y las copias de seguridad anteriores se pueden restaurar igual.
+- Si ya la tenías instalada, el nombre y el ícono nuevos pueden tardar unos días en aparecer en la pantalla de inicio (el celular los actualiza solo). Si preferís reinstalarla, primero exportá una copia de seguridad desde Ajustes, por si el celular borra los datos al desinstalar.
 
 ## 1.13.12 — Sentadilla sumo con las rodillas hacia adelante
 

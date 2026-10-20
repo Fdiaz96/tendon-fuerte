@@ -1,4 +1,8 @@
-# Tendón Fuerte — rehabilitación de tendones y entreno con mancuernas
+# XZ Fit — entreno con mancuernas y rehabilitación de tendones
+
+<img src="icon-192.png" width="96" alt="Logo de XZ Fit">
+
+(Antes se llamaba *Tendón Fuerte*; el repositorio y la dirección siguen siendo `tendon-fuerte` para no romper la app instalada ni los datos guardados.)
 
 App web instalable (PWA) para recuperar tendones con isométricos y ganar músculo con mancuernas, pesas rusas y aros.
 

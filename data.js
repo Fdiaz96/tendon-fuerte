@@ -1,4 +1,4 @@
-// Datos fijos de Tendón Fuerte: zonas de tendón, ejercicios (con sus bocetos) y plantillas de entreno.
+// Datos fijos de XZ Fit: zonas de tendón, ejercicios (con sus bocetos) y plantillas de entreno.
 // Bocetos: articulaciones en un lienzo de 200×170 (y de -10 a 160, piso en y=150), vista de costado mirando a la derecha.
 // N cuello, P cadera, E codo, W mano, K rodilla, F tobillo, T punta del pie. 1 = lado cercano, 2 = lado lejano.
 
