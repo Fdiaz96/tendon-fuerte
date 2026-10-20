@@ -2,6 +2,12 @@
 
 Todos los cambios de XZ Fit (antes Tendón Fuerte), del más nuevo al más viejo.
 
+## 1.14.1 — Nueva dirección: fdiaz96.github.io/xz-fit
+
+- La app ahora está en **https://fdiaz96.github.io/xz-fit/** (el repositorio pasó a llamarse `xz-fit`). La dirección vieja `…/tendon-fuerte/` deja de funcionar.
+- Tus datos siguen ahí: el navegador los guarda por sitio (`fdiaz96.github.io`), no por dirección, así que la app en la dirección nueva los encuentra igual.
+- Si la tenías instalada, instalala de nuevo desde la dirección nueva (la instalación vieja apunta a la dirección anterior).
+
 ## 1.14.0 — Ahora se llama XZ Fit
 
 - **Nuevo nombre: XZ Fit.** Cambia en la pantalla de inicio del celular, en la bienvenida, en el informe para el fisio, en los recordatorios del calendario y en los archivos que exporta la app.
