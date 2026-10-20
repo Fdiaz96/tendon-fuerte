@@ -2,6 +2,10 @@
 
 Todos los cambios de Tendón Fuerte, del más nuevo al más viejo.
 
+## 1.13.4 — Pesa rusa detrás del cuerpo cuando corresponde
+
+- La pesa rusa se dibuja según su propia profundidad. En la sentadilla sumo vista de atrás, el cuerpo la tapa mientras está adelante y aparece entre las piernas al bajar; en el swing y el goblet queda bien ubicada respecto del cuerpo y de las manos.
+
 ## 1.13.3 — Revisión de todas las animaciones
 
 Se revisaron las 49 animaciones una por una (inicio, mitad y final del movimiento) y se corrigieron las que se veían al revés o con articulaciones imposibles:

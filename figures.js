@@ -320,7 +320,7 @@ function figureSVG(ex, { animate = true, size = '', crop = false, muscles = true
   }
   const propsOf = (n) => props.filter((p) => p.at.slice(-1) === n).map((p) => propSVG(p, FR, ts, { path, group, animV, animate, front: !!f.front }));
   const arm = (n) => {
-    const ps = propsOf(n);
+    const ps = propsOf(n).filter((p) => !p.own);
     return group(armParts(n), musOn(['ua', 'fa'], n)) + ps.map((p) => p.under).join('') + hand(n) + ps.map((p) => p.over).join('');
   };
 
@@ -330,6 +330,11 @@ function figureSVG(ex, { animate = true, size = '', crop = false, muscles = true
   const groups = [
     { z: zOf(avgD(['N', 'P'])), svg: group([[pelvis, PAL.shorts], [torso, PAL.shirt]], musOn(['to'], '1')) },
     { z: zOf((J) => depth(J.H)) + 4, svg: head },
+    // La pesa rusa se ordena sola por su profundidad (la campana cuelga debajo del mango): de atrás queda tapada por el cuerpo.
+    ...props.filter((p) => p.t === 'kb').map((p) => {
+      const n = p.at.slice(-1), c = (J) => { const w = p.mid ? mix3(J.W1, J.W2, 0.5) : J[p.at]; return [w[0], w[1] - 12, w[2]]; };
+      return { z: zOf((J) => depth(c(J))) - 1, svg: propSVG(p, FR, ts, { path, group, animV, animate, front: !!f.front }).under };
+    }),
     ...['1', '2'].flatMap((n) => [
       { z: zOf(avgD(['S' + n, 'E' + n, 'W' + n])) + 2, svg: arm(n) },
       { z: zOf(avgD(['Hp' + n, 'K' + n, 'F' + n])), svg: group(legParts(n), musOn(['th', 'sh'], n)) },
@@ -448,7 +453,7 @@ function propSVG(p, FR, ts, { path, group, animV, animate, front }) {
   const a = prj(posOf(A));
   const move = animV('transform', FR.map((J) => pt2(prj(posOf(J)))), 'animateTransform', 'type="translate" ');
   const place = (s) => `<g transform="translate(${pt2(a)})">${move}${s}</g>`;
-  if (p.t === 'kb') return { under: place(`<path d="M-5.5 5V-.5a5.5 5.5 0 0111 0V5" fill="none" stroke="${L}" stroke-width="5"/><path d="M-5.5 5V-.5a5.5 5.5 0 0111 0V5" fill="none" stroke="${PAL.kb}" stroke-width="2.6"/><circle cx="0" cy="12" r="9" fill="${PAL.kb}" stroke="${L}" stroke-width="1.5"/><path d="M-4 8a5 5 0 014-2" stroke="#6B7280" stroke-width="1.6" fill="none" stroke-linecap="round"/>`), over: '' };
+  if (p.t === 'kb') return { own: true, under: place(`<path d="M-5.5 5V-.5a5.5 5.5 0 0111 0V5" fill="none" stroke="${L}" stroke-width="5"/><path d="M-5.5 5V-.5a5.5 5.5 0 0111 0V5" fill="none" stroke="${PAL.kb}" stroke-width="2.6"/><circle cx="0" cy="12" r="9" fill="${PAL.kb}" stroke="${L}" stroke-width="1.5"/><path d="M-4 8a5 5 0 014-2" stroke="#6B7280" stroke-width="1.6" fill="none" stroke-linecap="round"/>`), over: '' };
   const M = (x, y, J) => (front ? [J[p.at][0] + 30, 150 - y, 100 - x] : [x - 100, 150 - y, J[p.at][2]]);
   if (p.t === 'towel') {   // toalla enrollada entre las dos manos
     const ln = (w, extra) => path((J) => `M${pt2(prj(J[p.at]))}L${pt2(prj(J[p.to]))}`, `fill="none" stroke-width="${w}" stroke-linecap="round" ${extra}`);
