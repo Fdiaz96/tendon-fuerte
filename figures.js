@@ -171,17 +171,18 @@ function patch(f, [key, t0, t1, ang, span], J, n) {
   const d = unit3(sub3(s[1], s[0])), f3 = front3(f, key, J, n);
   const a = unit3(sub3(f3, scl3(d, dot3(f3, d)))), l = unit3(cross3(d, a));
   const R = (s[2] + s[3]) / 2, [ra, rl] = key === 'to' ? [8.5, 12.5] : [R, R];
-  let lo = Infinity, hi = -Infinity, vis = -1;
+  let lo = Infinity, hi = -Infinity, vis = -1, peek = 0;
   for (let i = 0; i <= 36; i++) {
     const g = ((ang + span * (i / 18 - 1)) * Math.PI) / 180, c = Math.cos(g), sn = Math.sin(g);
     const fac = dot3(unit3(add3(scl3(a, c / ra), scl3(l, sn / rl))), CAM.v);
-    vis = Math.max(vis, fac);
-    if (fac < -0.02) continue;
     const pv = prjV(add3(scl3(a, ra * c), scl3(l, rl * sn))), o = (pv[0] * n2[0] + pv[1] * n2[1]) / R;
+    if (fac > vis) { vis = fac; peek = o; }
+    if (fac < -0.02) continue;
     lo = Math.min(lo, o); hi = Math.max(hi, o);
   }
   const len = Math.hypot(q[0] - p[0], q[1] - p[1]) * (t1 - t0);
-  if (lo > hi) return { s2: [p, q, s[2], s[3]], o: 0, w: 0, vis, len, R };
+  // Si mira para el otro lado (p. ej. el abdomen en la plancha), se asoma por el borde más cercano: nunca desaparece.
+  if (lo > hi) { const w = Math.min(0.28, (0.3 * len) / R); return { s2: [p, q, s[2], s[3]], o: Math.sign(peek || 1) * (0.92 - w), w, vis, len, R }; }
   // El ancho crece de a poco a medida que el músculo gira hacia la cámara (sin saltos entre fotogramas).
   const show = Math.min(1, Math.max(0, (vis - 0.15) / 0.5));
   let o = (lo + hi) / 2, w = 0.28 + Math.max(0, (hi - lo) / 2 - 0.28) * show;

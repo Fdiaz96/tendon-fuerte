@@ -146,12 +146,14 @@ ok(L('figureSVG(EXERCISES.lateral).includes(PAL.db) && figureSVG(EXERCISES.later
 ok(L('figureSVG(EXERCISES.press_suelo).split(PAL.db).length') > L('figureSVG(EXERCISES.remo_silla).split(PAL.db).length'), 'con las dos manos libres hay dos mancuernas; en el remo a un brazo, una');
 ok(L('Object.values(EXERCISES).every((e) => !/NaN|undefined/.test(figureSVG(e)) && !/NaN|undefined/.test(figureSVG(e, { crop: true })))'), 'ninguna ilustración tiene coordenadas inválidas');
 // Músculos en todas las animaciones: no desaparecen, no se hinchan y los miembros no se acortan entre fotogramas.
-// En plancha y flexiones el pecho y el abdomen miran al piso: la cámara (desde arriba) no los puede mostrar.
+// En plancha y flexiones el pecho y el abdomen miran al piso: se ven asomando por el borde (vis baja, pero con ancho).
 const MUS_EXC = new Set(['plancha abs', 'flexiones chest']);
 const stats = L(`Object.values(EXERCISES).map((e) => [e.id, muscleStats(e)])`);
 const bad = (fn) => stats.flatMap(([id, st]) => st.muscles.filter((m) => !MUS_EXC.has(id + ' ' + m.m) && m.frames.some((p, i) => p && fn(p, m.frames[i - 1]))).map((m) => id + ' ' + m.m));
 let issues = bad((p) => p.vis < 0.15);
 ok(!issues.length, `el músculo trabajado se ve en todos los fotogramas ${issues.join(', ')}`);
+issues = stats.flatMap(([id, st]) => st.muscles.filter((m) => m.frames.some((p) => p && p.w < 0.2)).map((m) => id + ' ' + m.m));
+ok(!issues.length, `ningún músculo desaparece, ni siquiera los que miran al piso ${issues.join(', ')}`);
 issues = bad((p) => p.w * p.R > 0.32 * p.len || Math.abs(p.o) + p.w > 0.93);
 ok(!issues.length, `los músculos no se hinchan ni se salen del contorno ${issues.join(', ')}`);
 issues = bad((p, prev) => prev && prev.w > 0.1 && Math.abs(p.w * p.R - prev.w * prev.R) > 0.3 * prev.w * prev.R + 0.4);

@@ -2,6 +2,11 @@
 
 Todos los cambios de Tendón Fuerte, del más nuevo al más viejo.
 
+## 1.13.5 — Ningún músculo desaparece
+
+- Cuando el músculo trabajado mira para el lado contrario a la cámara (el abdomen en la plancha o el pecho en las flexiones, que miran al piso), el rojo se asoma por el borde del cuerpo más cercano en lugar de desaparecer.
+- Nuevo test: en todos los fotogramas de los 49 ejercicios, cada músculo trabajado tiene un ancho visible.
+
 ## 1.13.4 — Pesa rusa detrás del cuerpo cuando corresponde
 
 - La pesa rusa se dibuja según su propia profundidad. En la sentadilla sumo vista de atrás, el cuerpo la tapa mientras está adelante y aparece entre las piernas al bajar; en el swing y el goblet queda bien ubicada respecto del cuerpo y de las manos.
