@@ -2,6 +2,15 @@
 
 Todos los cambios de Tendón Fuerte, del más nuevo al más viejo.
 
+## 1.6.0 — Calculadora de discos e instalación
+
+- **Mancuernas de discos** (Ajustes → Equipo → Mancuernas → *Son de discos*): cargás el peso de la barra y tus discos (peso y cantidad total). La app:
+  - calcula **todos los pesos que podés armar** de verdad (de cada disco se usan múltiplos de 4: lo mismo de cada lado y en las dos mancuernas);
+  - usa esos pesos para sugerir, calibrar y progresar;
+  - en cada ejercicio muestra **qué discos poner de cada lado** (por ejemplo, "Por lado: 2,5 + 1,25 kg").
+- Si un peso de trabajo anterior no se puede armar con tus discos, se redondea al posible más cercano por debajo.
+- **Instalar la app**: en Android/Chrome aparece una tarjeta con botón *Instalar*; en iPhone, instrucciones para *Agregar a inicio* (así Safari no borra los datos).
+
 ## 1.5.0 — Entrada en calor e informe para el fisio
 
 - **Entrada en calor** al empezar cada entreno, con casillas para tildar:

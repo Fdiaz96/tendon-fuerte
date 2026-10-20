@@ -31,6 +31,17 @@ eq(L('implFor({ impl: "m:zz" }, eq2)'), null, 'máquina borrada → falta equipo
 eq(L('weightSteps(eq2, "m:p1")'), [5, 7.5, 10, 12.5, 15, 17.5, 20], 'pesos de la máquina de a 2,5');
 ok(L('Object.values(EXERCISES).filter((e) => e.cat).every((e) => CATS[e.cat])'), 'cada ejercicio de la biblioteca tiene categoría válida');
 
+// Mancuernas de discos
+ctx.pl = { bar: 2, items: [{ kg: 5, n: 4 }, { kg: 2.5, n: 4 }, { kg: 1.25, n: 4 }] };
+eq([...L('plateCombos(pl)').keys()].sort((a, b) => a - b), [2, 4.5, 7, 9.5, 12, 14.5, 17, 19.5], 'barra 2 kg + discos de 5, 2,5 y 1,25 (4 de cada uno): pesos posibles');
+eq(L('plateCombos(pl).get(9.5)'), [2.5, 1.25], '9,5 kg = 2,5 + 1,25 por lado');
+ctx.eqp = { db: { min: 2, max: 24, step: 2, plates: { ...ctx.pl, on: true } }, kb: [] };
+eq(L('weightSteps(eqp, "db")').length, 8, 'con discos, los pasos salen de las combinaciones');
+eq(L('platesFor(eqp, 12)'), [5], '12 kg = un disco de 5 por lado');
+eq(L('platesFor({ db: { min: 2, max: 24, step: 2 } }, 12)'), null, 'sin modo discos no hay cálculo');
+ctx.pl8 = { bar: 2, items: [{ kg: 2.5, n: 8 }] };
+eq([...L('plateCombos(pl8)').keys()].sort((a, b) => a - b), [2, 7, 12], '8 discos de 2,5: hasta 2 por lado');
+
 // Estimación de peso
 ctx.man = { sex: 'h', weight: 80, age: 30, exp: 'novato' };
 ctx.woman = { sex: 'm', weight: 60, age: 30, exp: 'novato' };

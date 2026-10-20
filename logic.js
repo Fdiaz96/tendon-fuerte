@@ -17,9 +17,28 @@ const weekKey = (k) => { const d = parseDay(k); return addDays(k, -((d.getDay() 
 
 // ——— Equipo ———
 // Pesos disponibles para un implemento. db: { min, max, step } (por mancuerna); kb: lista de pesas rusas.
+// Mancuernas de discos: db.plates = { bar, items: [{ kg, n }] } (n = discos de ese peso en total, para el par).
+// Cada mancuerna lleva lo mismo de cada lado, así que de cada disco se usan múltiplos de 4. Devuelve peso → discos por lado.
+function plateCombos(pl) {
+  const types = (pl.items || []).filter((x) => x.kg > 0 && x.n >= 4).map((x) => ({ kg: x.kg, max: Math.floor(x.n / 4) })).sort((a, b) => b.kg - a.kg);
+  const out = new Map();
+  const walk = (i, side) => {
+    if (i === types.length) {
+      const w = Math.round((pl.bar + 2 * side.reduce((a, b) => a + b, 0)) * 100) / 100;
+      if (!out.has(w) || out.get(w).length > side.length) out.set(w, side);
+      return;
+    }
+    for (let k = 0; k <= types[i].max; k++) walk(i + 1, [...side, ...Array(k).fill(types[i].kg)]);
+  };
+  walk(0, []);
+  return out;
+}
+const platesFor = (equip, w) => (equip.db?.plates?.on ? plateCombos(equip.db.plates).get(w) || null : null);
+
 // Máquinas propias: impl 'm:<id>' con su propio { min, max, step }.
 function weightSteps(equip, impl) {
   if (impl === 'kb') return [...(equip.kb || [])].sort((a, b) => a - b);
+  if (impl === 'db' && equip.db?.plates?.on) return [...plateCombos(equip.db.plates).keys()].sort((a, b) => a - b);
   const range = impl === 'db' ? equip.db : impl?.startsWith?.('m:') ? (equip.machines || []).find((m) => 'm:' + m.id === impl) : null;
   if (!range || !(range.step > 0)) return [];
   const { min, max, step } = range, out = [];

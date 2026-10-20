@@ -1,7 +1,7 @@
 // Tendón Fuerte — rehabilitación de tendones y entreno con mancuernas. Los datos viven solo en el celular (IndexedDB).
 // Protocolo de tendones del video de Jeremy Ethier con Keith Baar y Coach Q; reglas en logic.js, bocetos en figures.js.
 
-const APP_VERSION = '1.5.0';
+const APP_VERSION = '1.6.0';
 const DAY_NAMES = { lu: 'Lu', ma: 'Ma', mi: 'Mi', ju: 'Ju', vi: 'Vi', sa: 'Sá', do: 'Do' };
 const SIDES = { der: 'derecha', izq: 'izquierda', ambos: 'ambos lados' };
 const REST_SECS = 90, ISO_REST = 60;
@@ -104,7 +104,7 @@ function planFor(tpl) {
     if (ex.kind === 'peso') {
       const lift = S.lifts[ex.id];
       item.calib = !lift;
-      item.base = lift ? lift.w : ex.ratio ? startWeight(S.profile, ex, steps) : roundDown(steps, ex.start || 0);
+      item.base = lift ? roundDown(steps, lift.w) || lift.w : ex.ratio ? startWeight(S.profile, ex, steps) : roundDown(steps, ex.start || 0);
       item.w = r ? painCap(item.base, steps) : item.base;
       item.capped = !!r && item.w < item.base;
     } else if (ex.kind === 'tiempo') item.secs = S.lifts[ex.id]?.secs || 30;
@@ -146,6 +146,7 @@ function renderHome() {
   const t = today(), checks = pendingChecks(S, t);
   const hasZones = activeZones().length > 0;
   let h = `<p class="greet">${S.profile.name ? `Hola, ${esc(S.profile.name)}` : 'Hola'} · ${fmtDate(t)}</p><h1>Hoy</h1>`;
+  h += installCard();
   const ws = weekStats(S, t), st = streak(S, t);
   const dots = (n, of) => Array.from({ length: Math.max(of, n) }, (_, i) => `<i class="${i < n ? 'on' : ''}"></i>`).join('');
   h += `<div class="week card"><div><span class="muted small">Entrenos esta semana</span><div class="dots">${dots(ws.train, ws.target)}</div></div>
@@ -360,7 +361,7 @@ function renderWorkout() {
       ${k === 'peso' ? `<select data-w="${i}.${j}.rir" aria-label="Repeticiones en reserva"><option value="">–</option>${[0, 1, 2, 3, 4].map((n) => `<option ${String(r.rir) === String(n) ? 'selected' : ''}>${n}</option>`).join('')}</select>` : '<span></span>'}
       <button class="ok" data-action="set-done" data-i="${i}" data-j="${j}" aria-label="Serie hecha">✓</button></div>`).join('');
     return `<div class="card${it.r || it.maint ? ' pain' : ''}"><div class="ex"><div class="thumb">${figureSVG(it.ex, { crop: true })}</div>
-      <div class="info"><h3>${esc(it.ex.name)}</h3><p class="muted small">${it.sets} × ${setLabel(it)}${weighted ? ` · ${fmtKg(it.w)}` : ''}</p></div></div>
+      <div class="info"><h3>${esc(it.ex.name)}</h3><p class="muted small">${it.sets} × ${setLabel(it)}${weighted ? ` · ${fmtKg(it.w)}` : ''}</p>${it.impl === 'db' && platesFor(S.equip, it.w) ? `<p class="plates">Por lado: ${platesLabel(it.w)}</p>` : ''}</div></div>
       ${notes.join('')}<details class="cues"><summary>Cómo se hace</summary><ul>${it.ex.cues.map((c) => `<li>${esc(c)}</li>`).join('')}</ul></details>
       <div class="sets">${head}${rows}</div></div>`;
   }).join('');
@@ -791,7 +792,9 @@ function renderSettings() {
 function equipFields(prefix = '') {
   const e = S.equip;
   return `<div class="row"><h3>Mancuernas</h3><label class="switch acc"><input type="checkbox" data-action="eq-db" ${e.db ? 'checked' : ''} aria-label="Tengo mancuernas"><i></i></label></div>
-    ${e.db ? `<div class="grid2" style="grid-template-columns:1fr 1fr 1fr"><label class="field"><span>Mínimo (kg)</span><input type="number" inputmode="decimal" step="0.5" data-set="equip.db.min" value="${e.db.min}"></label><label class="field"><span>Máximo (kg)</span><input type="number" inputmode="decimal" step="0.5" data-set="equip.db.max" value="${e.db.max}"></label><label class="field"><span>Salto (kg)</span><input type="number" inputmode="decimal" step="0.25" data-set="equip.db.step" value="${e.db.step}"></label></div>` : ''}
+    ${e.db ? `<div class="row" style="margin-top:6px"><div><b>Son de discos</b><br><span class="small muted">Cargá barra y discos: la app calcula los pesos posibles y qué poner de cada lado.</span></div><label class="switch acc"><input type="checkbox" data-action="eq-plates" ${e.db.plates?.on ? 'checked' : ''} aria-label="Mancuernas de discos"><i></i></label></div>` : ''}
+    ${e.db?.plates?.on ? platesFields() : ''}
+    ${e.db && !e.db.plates?.on ? `<div class="grid2" style="grid-template-columns:1fr 1fr 1fr"><label class="field"><span>Mínimo (kg)</span><input type="number" inputmode="decimal" step="0.5" data-set="equip.db.min" value="${e.db.min}"></label><label class="field"><span>Máximo (kg)</span><input type="number" inputmode="decimal" step="0.5" data-set="equip.db.max" value="${e.db.max}"></label><label class="field"><span>Salto (kg)</span><input type="number" inputmode="decimal" step="0.25" data-set="equip.db.step" value="${e.db.step}"></label></div>` : ''}
     <label class="field"><span>Pesas rusas (kg, separadas por coma)</span><input data-set="equip.kb" ${prefix} value="${e.kb.join(', ')}" placeholder="Ej.: 12, 20"></label>
     <div class="row"><h3>Aros o TRX</h3><label class="switch acc"><input type="checkbox" data-action="eq-rings" ${e.rings ? 'checked' : ''} aria-label="Tengo aros"><i></i></label></div>
     ${[['bench', 'Banco'], ['bar', 'Barra de dominadas'], ['band', 'Bandas elásticas']].map(([k, n]) => `<div class="row"><h3>${n}</h3><label class="switch acc"><input type="checkbox" data-action="eq-flag" data-k="${k}" ${e[k] ? 'checked' : ''} aria-label="Tengo ${n.toLowerCase()}"><i></i></label></div>`).join('')}
@@ -799,6 +802,35 @@ function equipFields(prefix = '') {
     ${(e.machines || []).map((m) => `<div class="row"><div><b>${esc(m.name)}</b><br><span class="small muted">${m.min}–${m.max} kg, de a ${m.step}</span></div><button class="link" data-action="mach-edit" data-id="${m.id}">Editar</button></div>`).join('') || '<p class="faint small">Polea, prensa, barra con discos… cualquier cosa con su rango de peso.</p>'}
     <button class="sec" style="width:100%;margin-top:8px" data-action="mach-edit">+ Agregar máquina</button>`;
 }
+// Mancuernas de discos: barra, lista de discos (peso y cantidad total) y los pesos que se pueden armar.
+function platesFields() {
+  const pl = S.equip.db.plates, steps = weightSteps(S.equip, 'db');
+  return `<label class="field"><span>Barra de cada mancuerna (kg, con los cierres)</span><input type="number" inputmode="decimal" step="0.1" data-plate="bar" value="${pl.bar}"></label>
+    ${pl.items.map((x, i) => `<div class="plate-row"><label class="field"><span>Disco (kg)</span><input type="number" inputmode="decimal" step="0.25" data-plate="${i}.kg" value="${x.kg}"></label><label class="field"><span>Cantidad total</span><input type="number" inputmode="numeric" min="0" data-plate="${i}.n" value="${x.n}"></label><button data-action="plate-del" data-i="${i}" aria-label="Quitar disco">✕</button></div>`).join('')}
+    <button class="sec" style="width:100%" data-action="plate-add">+ Agregar disco</button>
+    <p class="small" style="margin-top:8px"><span class="muted">Pesos posibles por mancuerna:</span> <b class="num">${steps.map((w) => String(w).replace('.', ',')).join(' · ') || '—'}</b></p>
+    <p class="faint small">Para el par se usan 4 discos iguales por cada uno que va de cada lado.</p>`;
+}
+const platesLabel = (w) => { const p = platesFor(S.equip, w); return !p ? '' : p.length ? p.map((x) => String(x).replace('.', ',')).join(' + ') + ' kg' : 'sin discos'; };
+
+// Instalar la app: botón en Android/Chrome (beforeinstallprompt) e instrucciones en iPhone.
+const isStandalone = () => matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+const isIOS = () => /iphone|ipad|ipod/i.test(navigator.userAgent);
+function installCard() {
+  if (S.hideInstall || isStandalone() || !S.onboarded) return '';
+  if (installEvt) return `<div class="card acc"><div class="row"><div><h3>Instalá la app</h3><p class="muted small">Abre a pantalla completa, sin barra del navegador, y protege mejor tus datos.</p></div></div><div class="btns"><button class="cta" data-action="install">Instalar</button></div><button class="link" data-action="install-hide">Ahora no</button></div>`;
+  if (isIOS()) return `<div class="card acc"><h3>Instalala en tu iPhone</h3><p class="muted small">En Safari tocá <b>Compartir</b> (el cuadrado con la flecha) → <b>Agregar a inicio</b>. Así Safari no borra tus datos y se abre a pantalla completa.</p><button class="link" data-action="install-hide">Entendido</button></div>`;
+  return '';
+}
+async function installApp() {
+  if (!installEvt) return;
+  installEvt.prompt();
+  const r = await installEvt.userChoice.catch(() => null);
+  installEvt = null;
+  if (r?.outcome !== 'accepted') { S.hideInstall = true; persist(); }
+  render();
+}
+
 function setPath(path, raw) {
   const keys = path.split('.'), last = keys.pop();
   let o = S; for (const k of keys) o = o[k];
@@ -894,6 +926,10 @@ document.addEventListener('click', (e) => {
     'cancel-rehab': () => { if (confirm('¿Salir sin guardar la sesión?')) { clearInterval(R?.timer); R = null; $('rsheet').close(); keepAwake(false); } },
     'pref': () => { S.prefs[d.k] = d.v === undefined ? !S.prefs[d.k] : Number(d.v); persist(); render(); if (d.k === 'sound' || d.k === 'voice') cue('go', 'Así suena'); },
     'news': openNews,
+    'plate-add': () => { S.equip.db.plates.items.push({ kg: 1.25, n: 4 }); persist(); render(); },
+    'plate-del': () => { S.equip.db.plates.items.splice(+d.i, 1); persist(); render(); },
+    'install': installApp,
+    'install-hide': () => { S.hideInstall = true; persist(); render(); },
     'warm': () => { W.warm[+d.i].done = !W.warm[+d.i].done; renderWorkout(); },
     'report': () => shareFile(`informe-tendon-fuerte-${today()}.html`, reportHTML(), 'text/html'),
     'news-seen': () => { S.seenVersion = APP_VERSION; persist(); render(); },
@@ -969,6 +1005,15 @@ document.addEventListener('change', (e) => {
     if (el.checked && el.dataset.k === 'bench' && S.templates.A.includes('press_suelo')) toast('Con banco podés cambiar el press en el suelo por press en banco: Entreno → Editar rutina.');
     if (el.checked && el.dataset.k === 'bar') toast('Las dominadas quedan disponibles en Entreno → Editar rutina (cuidado con el codo).');
   }
+  if (a === 'eq-plates') {
+    S.equip.db.plates ||= { bar: 2, items: [{ kg: 5, n: 4 }, { kg: 2.5, n: 4 }, { kg: 1.25, n: 4 }] };
+    S.equip.db.plates.on = el.checked; persist(); $('onb').open ? renderOnb() : render();
+  }
+  if (el.dataset.plate) {
+    const [i, k] = el.dataset.plate.split('.'), v = Number(String(el.value).replace(',', '.'));
+    if (i === 'bar') S.equip.db.plates.bar = v >= 0 ? v : 0; else if (v >= 0) S.equip.db.plates.items[+i][k] = v;
+    persist(); $('onb').open ? renderOnb() : render(); return;
+  }
   if (a === 'pref-toggle') { S.prefs[el.dataset.k] = el.checked; persist(); if (el.checked && el.dataset.k !== 'auto') cue('go', 'Así suena'); }
   if (a === 'hist-zone') { histZone = el.value; renderHistory(); }
   if (a === 'hist-ex') { histEx = el.value; renderHistory(); }
@@ -977,6 +1022,10 @@ document.addEventListener('change', (e) => {
 document.addEventListener('input', (e) => { if (e.target.dataset.w) { const [i, j, k] = e.target.dataset.w.split('.'); W.items[+i].rows[+j][k] = e.target.value; } });
 // Escape cierra los diálogos; en entreno y rehab se pregunta antes.
 document.addEventListener('cancel', (e) => { if (['wsheet', 'rsheet', 'painsheet', 'onb'].includes(e.target.id)) e.preventDefault(); }, true);
+
+let installEvt = null;
+window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); installEvt = e; if (tab === 'home') render(); });
+window.addEventListener('appinstalled', () => { installEvt = null; toast('¡App instalada!'); render(); });
 
 // ——— Arranque ———
 (async () => {

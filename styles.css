@@ -102,6 +102,11 @@ button.warm-item .box { flex: none; width: 24px; height: 24px; border-radius: 7p
 button.warm-item.on { color: var(--faint); text-decoration: line-through; }
 button.warm-item.on .box { background: var(--acc); border-color: var(--acc); color: var(--acc-ink); }
 
+/* Discos por lado */
+.plates { font-size: 13px; color: var(--acc); margin: 2px 0 0; font-weight: 600; }
+.plate-row { display: grid; grid-template-columns: 1fr 1fr 40px; gap: 8px; align-items: end; }
+.plate-row button { height: 44px; border-radius: 10px; background: var(--card2); color: var(--danger); font-size: 18px; }
+
 /* Series */
 .sets { margin-top: 10px; }
 .set { display: grid; grid-template-columns: 34px 1fr 1fr 1fr 48px; gap: 6px; align-items: center; margin-top: 6px; }

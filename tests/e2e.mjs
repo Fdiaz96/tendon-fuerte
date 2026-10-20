@@ -183,6 +183,17 @@ await click('[data-action="edit-routine"]');
 const jalon = page.locator('#view-train .ex', { hasText: 'Jalón en polea' });
 ok((await jalon.locator('.num').textContent()).trim() === '5', 'arranca en el mínimo de la máquina (5 kg) para calibrar');
 
+// 8b2. Mancuernas de discos
+await click('[data-tab="settings"]');
+await page.check('#view-settings [data-action="eq-plates"]');
+ok((await state()).equip.db.plates.on === true, 'activa mancuernas de discos');
+ok((await page.locator('#view-settings').textContent()).includes('Pesos posibles'), 'muestra los pesos posibles');
+await click('[data-tab="train"]');
+await click('#view-train [data-action="start-workout"][data-tpl="A"]');
+ok(await page.locator('#wsheet .plates').count() > 0, 'en la sesión muestra los discos por lado');
+await shot('19-discos');
+await click('#wsheet [data-action="cancel-workout"]');
+
 // 8c. Preferencias de sesión y novedades
 await click('[data-tab="settings"]');
 await click('#view-settings [data-action="pref"][data-k="rest"][data-v="120"]');
