@@ -7,6 +7,7 @@ Todos los cambios de Tendón Fuerte, del más nuevo al más viejo.
 - **Elevación lateral** (y la versión lenta de rehabilitación): los brazos ahora se abren hacia los costados hasta la altura de los hombros, como una T. Antes se iban hacia adelante, se veían torcidos y el brazo de atrás quedaba encima de la cabeza.
 - Las mancuernas de los ejercicios dibujados de frente ahora quedan bien orientadas, con las palmas hacia abajo y el mango hacia adelante. Antes estaban giradas.
 - Los ejercicios dibujados de frente (elevación lateral, rotaciones externas, Tyler twist) usan una cámara más frontal para que el movimiento se entienda.
+- Test de la cámara actualizado a este cambio.
 
 ## 1.13.1 — Página de prueba de animaciones (temporal)
 

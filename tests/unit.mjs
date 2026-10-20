@@ -160,7 +160,7 @@ const lenVar = L(`Object.values(EXERCISES).filter((e) => e.fig.b).map((e) => { c
 issues = lenVar.filter(([, okk]) => !okk).map(([id]) => id);
 ok(!issues.length, `brazos y piernas no se acortan a mitad del movimiento (interpolación por ángulos) ${issues.join(', ')}`);
 ok(L(`figureSVG(EXERCISES.curl_martillo).includes('keyTimes="0;0.083')`), 'la animación usa fotogramas intermedios');
-ok(L(`muscleStats(EXERCISES.rdl).yaw < 0 && muscleStats(EXERCISES.lateral).yaw === 40`), 'la cámara gira para mostrar isquios y glúteos (peso muerto) y queda de frente en el resto');
+ok(L(`muscleStats(EXERCISES.rdl).yaw < 0 && muscleStats(EXERCISES.lateral).yaw === 65 && muscleStats(EXERCISES.curl_martillo).yaw === 40`), 'la cámara gira para mostrar isquios y glúteos (peso muerto), es más frontal en los dibujados de frente y queda en 40° en el resto');
 ok(Object.values(L('REHAB')).every((p) => L(`EXERCISES['${p[1]}'] && EXERCISES['${p[2]}']`)), 'cada zona tiene ejercicios de fase 1 y 2');
 ok(L('Object.values(REHAB_OPTIONS).every((z) => [1, 2].every((f) => z[f].length && z[f].every((id) => EXERCISES[id] && EXERCISES[id].zone !== undefined || EXERCISES[id].tag)))'), 'las opciones de rehabilitación existen');
 ok(L('Object.entries(REHAB).every(([z, p]) => REHAB_OPTIONS[z][1][0] === p[1] && REHAB_OPTIONS[z][2][0] === p[2])'), 'la primera opción de cada fase es la del protocolo base');
